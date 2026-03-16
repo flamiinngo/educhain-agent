@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduChain — Agent Control Room</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #fff; min-height: 100vh; }
+    .container { max-width: 900px; margin: 0 auto; padding: 30px 20px; }
+    
+    h1 { font-size: 2em; background: linear-gradient(135deg, #00ff88, #00bbff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; }
+    .subtitle { text-align: center; color: #888; margin: 10px 0 30px; }
+    
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 25px; }
+    .stat-card { background: #111; border: 1px solid #222; border-radius: 10px; padding: 15px; text-align: center; }
+    .stat-card .value { font-size: 1.6em; font-weight: bold; color: #00ff88; }
+    .stat-card .label { font-size: 0.75em; color: #888; margin-top: 4px; }
+    
+    .health-bar-container { background: #111; border: 1px solid #222; border-radius: 10px; padding: 15px; margin-bottom: 25px; }
+    .health-bar-container h3 { color: #00bbff; margin-bottom: 10px; }
+    .health-bar { height: 20px; background: #1a1a1a; border-radius: 10px; overflow: hidden; }
+    .health-fill { height: 100%; border-radius: 10px; transition: width 0.5s, background 0.5s; }
+    .health-label { text-align: center; margin-top: 8px; font-size: 0.9em; color: #888; }
+    
+    .log-container { background: #111; border: 1px solid #222; border-radius: 10px; padding: 20px; }
+    .log-container h3 { color: #00bbff; margin-bottom: 15px; }
+    .logs { font-family: 'Courier New', monospace; font-size: 0.82em; line-height: 2; max-height: 500px; overflow-y: auto; }
+    .log-line { border-bottom: 1px solid #1a1a1a; padding: 3px 0; }
+    .log-time { color: #555; }
+    .log-type { color: #00bbff; font-weight: bold; }
+    .log-msg { color: #ccc; }
+    .log-human { color: #00ff88; }
+    
+    .links { text-align: center; margin-top: 20px; }
+    .links a { color: #00bbff; margin: 0 15px; text-decoration: none; }
+    .links a:hover { text-decoration: underline; }
+    
+    .back { display: inline-block; color: #888; text-decoration: none; margin-bottom: 20px; }
+    .back:hover { color: #fff; }
+
+    .mode-badge { display: inline-block; padding: 6px 16px; border-radius: 15px; font-weight: bold; font-size: 0.95em; }
+    .mode-active { background: #003322; border: 1px solid #00ff88; color: #00ff88; }
+    .mode-survival { background: #332200; border: 1px solid #ff8800; color: #ff8800; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <a href="/" class="back">← Back to Dashboard</a>
+    <h1>🤖 Agent Control Room</h1>
+    <p class="subtitle">EduChain operates autonomously. No human is in the loop. <span id="modeBadge" class="mode-badge mode-active">🟢 ACTIVE</span></p>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="value" id="uptime">-</div><div class="label">Uptime</div></div>
+      <div class="stat-card"><div class="value" id="totalActions">-</div><div class="label">Total Actions</div></div>
+      <div class="stat-card"><div class="value" id="lessons">-</div><div class="label">Lessons</div></div>
+      <div class="stat-card"><div class="value" id="payments">-</div><div class="label">Payments</div></div>
+      <div class="stat-card"><div class="value" id="treasury">-</div><div class="label">Treasury (cUSD)</div></div>
+      <div class="stat-card"><div class="value" id="runway">-</div><div class="label">Runway (Days)</div></div>
+    </div>
+
+    <div class="health-bar-container">
+      <h3>💚 Treasury Health</h3>
+      <div class="health-bar"><div class="health-fill" id="healthFill" style="width:100%; background:#00ff88;"></div></div>
+      <div class="health-label" id="healthLabel">Healthy — 20 days runway</div>
+    </div>
+
+    <div class="log-container">
+      <h3>📡 Live Agent Logs</h3>
+      <div class="logs" id="logContainer">
+        <div class="log-line">Connecting to agent...</div>
+      </div>
+    </div>
+
+    <div class="links">
+      <a href="/.well-known/agent.json" target="_blank">View agent.json →</a>
+      <a href="/proof" target="_blank">View /proof →</a>
+      <a href="/status" target="_blank">View /status →</a>
+    </div>
+  </div>
+
+  <script>
+    async function updateAgent() {
+      try {
+        const res = await fetch('/status');
+        const data = await res.json();
+
+        document.getElementById('uptime').textContent = data.uptime;
+        document.getElementById('totalActions').textContent = data.recentActions.length;
+        document.getElementById('lessons').textContent = data.metrics.totalLessonsAllTime;
+        document.getElementById('payments').textContent = data.metrics.paymentsToday;
+        document.getElementById('treasury').textContent = data.treasury.balanceCUSD;
+        document.getElementById('runway').textContent = data.treasury.runwayDays;
+
+        // Mode badge
+        const badge = document.getElementById('modeBadge');
+        if (data.survivalMode) {
+          badge.textContent = '🔴 SURVIVAL MODE';
+          badge.className = 'mode-badge mode-survival';
+        } else {
+          badge.textContent = '🟢 ACTIVE';
+          badge.className = 'mode-badge mode-active';
+        }
+
+        // Health bar
+        const maxRunway = 30;
+        const pct = Math.min(100, (data.treasury.runwayDays / maxRunway) * 100);
+        const fill = document.getElementById('healthFill');
+        fill.style.width = pct + '%';
+        if (pct > 50) fill.style.background = '#00ff88';
+        else if (pct > 25) fill.style.background = '#ffaa00';
+        else fill.style.background = '#ff4444';
+        document.getElementById('healthLabel').textContent =
+          pct > 50 ? `Healthy — ${data.treasury.runwayDays} days runway` :
+          pct > 25 ? `Warning — ${data.treasury.runwayDays} days runway` :
+          `Critical — ${data.treasury.runwayDays} days runway`;
+
+        // Logs
+        const container = document.getElementById('logContainer');
+        container.innerHTML = '';
+        const actions = [...data.recentActions].reverse();
+        actions.forEach(action => {
+          const line = document.createElement('div');
+          line.className = 'log-line';
+          const time = new Date(action.timestamp).toLocaleTimeString();
+          line.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-type">${action.type}</span> <span class="log-msg">${action.message}</span> <span class="log-human">humanInvolved: false ✓</span>`;
+          container.appendChild(line);
+        });
+
+      } catch (err) {
+        console.error('Agent update error:', err);
+      }
+    }
+
+    updateAgent();
+    setInterval(updateAgent, 5000);
+  </script>
+
+</body>
+</html>

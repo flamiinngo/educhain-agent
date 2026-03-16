@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduChain — Impact NFTs</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #fff; min-height: 100vh; }
+    .container { max-width: 900px; margin: 0 auto; padding: 30px 20px; }
+    
+    h1 { font-size: 2em; background: linear-gradient(135deg, #00ff88, #00bbff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; }
+    .subtitle { text-align: center; color: #888; margin: 10px 0 30px; }
+    
+    .impact-stats { display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; margin-bottom: 30px; }
+    .impact-stat { background: #111; border: 1px solid #222; border-radius: 10px; padding: 15px 25px; text-align: center; }
+    .impact-stat .value { font-size: 1.6em; font-weight: bold; color: #00ff88; }
+    .impact-stat .label { font-size: 0.8em; color: #888; margin-top: 4px; }
+    
+    .nft-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+    .nft-card { background: #111; border: 1px solid #222; border-radius: 12px; overflow: hidden; transition: transform 0.3s, border-color 0.3s; }
+    .nft-card:hover { transform: translateY(-3px); border-color: #00ff88; }
+    .nft-header { background: linear-gradient(135deg, #003322, #002244); padding: 15px; }
+    .nft-header h3 { color: #00ff88; font-size: 1.1em; }
+    .nft-header .nft-id { color: #555; font-size: 0.85em; }
+    .nft-body { padding: 15px; }
+    .nft-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #1a1a1a; font-size: 0.9em; }
+    .nft-row .key { color: #888; }
+    .nft-row .val { color: #fff; }
+    .nft-row a { color: #00bbff; text-decoration: none; }
+    .nft-row a:hover { text-decoration: underline; }
+    .nft-footer { padding: 15px; text-align: center; }
+    .btn-buy { display: inline-block; padding: 10px 25px; background: linear-gradient(135deg, #00ff88, #00bbff); color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1em; }
+    .btn-buy:hover { opacity: 0.9; }
+    .btn-sold { background: #333; color: #888; cursor: default; }
+    
+    .empty { text-align: center; padding: 60px; color: #555; }
+    .back { display: inline-block; color: #888; text-decoration: none; margin-bottom: 20px; }
+    .back:hover { color: #fff; }
+    .footer { text-align: center; padding: 30px; color: #444; font-size: 0.9em; margin-top: 30px; }
+    .footer span { color: #00ff88; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <a href="/" class="back">← Back to Dashboard</a>
+    <h1>🖼️ Impact NFTs</h1>
+    <p class="subtitle">Every NFT is proof a child learned something. Buy one to fund the next lesson.</p>
+
+    <div class="impact-stats">
+      <div class="impact-stat"><div class="value" id="totalMinted">0</div><div class="label">Total Minted</div></div>
+      <div class="impact-stat"><div class="value" id="totalSold">0</div><div class="label">Total Sold</div></div>
+      <div class="impact-stat"><div class="value" id="totalRaised">$0</div><div class="label">Raised (cUSD)</div></div>
+    </div>
+
+    <div class="nft-grid" id="nftGrid">
+      <div class="empty">No Impact NFTs minted yet. Complete a lesson to mint the first one!</div>
+    </div>
+
+    <div class="footer">
+      100% of NFT sales fund student rewards. The agent mints, lists, and manages this marketplace without any human involvement. <span>humanInvolved: false</span>
+    </div>
+  </div>
+
+  <script>
+    async function loadNFTs() {
+      try {
+        const res = await fetch('/impact-nfts');
+        const data = await res.json();
+
+        document.getElementById('totalMinted').textContent = data.totalMinted;
+        document.getElementById('totalSold').textContent = data.totalSold;
+        document.getElementById('totalRaised').textContent = '$' + data.totalRaisedCUSD;
+
+        const grid = document.getElementById('nftGrid');
+
+        if (data.nfts.length === 0) {
+          grid.innerHTML = '<div class="empty">No Impact NFTs minted yet. Complete a lesson to mint the first one!</div>';
+          return;
+        }
+
+        grid.innerHTML = '';
+        data.nfts.forEach(nft => {
+          const card = document.createElement('div');
+          card.className = 'nft-card';
+          card.innerHTML = `
+            <div class="nft-header">
+              <span class="nft-id">IMPACT NFT #${nft.tokenId}</span>
+              <h3>${nft.topic}</h3>
+            </div>
+            <div class="nft-body">
+              <div class="nft-row"><span class="key">Score</span><span class="val">${nft.score}/5</span></div>
+              <div class="nft-row"><span class="key">Earned</span><span class="val">${nft.amountPaid} cUSD ✓</span></div>
+              <div class="nft-row"><span class="key">Date</span><span class="val">${new Date(nft.timestamp).toLocaleDateString()}</span></div>
+              <div class="nft-row"><span class="key">Filecoin</span><span class="val"><a href="https://w3s.link/ipfs/${nft.filecoinCID}" target="_blank">${nft.filecoinCID.substring(0, 12)}...</a></span></div>
+              <div class="nft-row"><span class="key">BaseScan</span><span class="val"><a href="https://sepolia.basescan.org/tx/${nft.paymentTxHash}" target="_blank">View TX</a></span></div>
+            </div>
+            <div class="nft-footer">
+              ${nft.forSale
+                ? `<button class="btn-buy" onclick="buyNFT(${nft.tokenId})">Buy for $1 → Fund Next Lesson</button>`
+                : `<button class="btn-buy btn-sold">SOLD</button>`
+              }
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+
+      } catch (err) {
+        console.error('NFT load error:', err);
+      }
+    }
+
+    async function buyNFT(tokenId) {
+      try {
+        const res = await fetch('/buy-nft/' + tokenId, { method: 'POST' });
+        const data = await res.json();
+        alert('Thank you! ' + data.message);
+        loadNFTs();
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    loadNFTs();
+    setInterval(loadNFTs, 15000);
+  </script>
+
+</body>
+</html>
