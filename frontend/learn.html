@@ -3,291 +3,1296 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EduChain — Learn & Earn</title>
+  <title>EduChain — Your Lesson</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #fff; min-height: 100vh; }
-    .container { max-width: 700px; margin: 0 auto; padding: 30px 20px; }
-    h1 { font-size: 2em; background: linear-gradient(135deg, #00ff88, #00bbff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; margin-bottom: 10px; }
-    .subtitle { text-align: center; color: #888; margin-bottom: 30px; }
-    
-    .step { background: #111; border: 1px solid #222; border-radius: 12px; padding: 25px; margin-bottom: 20px; display: none; }
-    .step.active { display: block; }
-    .step h2 { color: #00bbff; margin-bottom: 15px; font-size: 1.2em; }
-    
-    input, select { width: 100%; padding: 12px 15px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #fff; font-size: 1em; margin-bottom: 15px; }
-    input:focus, select:focus { outline: none; border-color: #00ff88; }
-    
-    .btn { display: inline-block; padding: 12px 30px; border-radius: 10px; border: none; font-size: 1em; font-weight: bold; cursor: pointer; transition: all 0.3s; }
-    .btn-go { background: linear-gradient(135deg, #00ff88, #00bbff); color: #000; }
-    .btn-go:hover { transform: translateY(-2px); }
-    .btn-go:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-    
-    .lesson-content { background: #0a0a0a; border: 1px solid #222; border-radius: 8px; padding: 20px; line-height: 1.8; margin-bottom: 20px; white-space: pre-wrap; }
-    
-    .quiz-question { background: #1a1a1a; border: 1px solid #222; border-radius: 8px; padding: 20px; margin-bottom: 15px; }
-    .quiz-question h3 { color: #00bbff; margin-bottom: 10px; }
-    .option { display: block; padding: 10px 15px; margin: 5px 0; background: #0a0a0a; border: 1px solid #333; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
-    .option:hover { border-color: #00ff88; }
-    .option.selected { border-color: #00ff88; background: #003322; }
-    
-    .timer { text-align: center; font-size: 1.5em; color: #00ff88; font-family: 'Courier New', monospace; margin: 15px 0; }
-    
-    .result { text-align: center; padding: 20px; }
-    .result .score { font-size: 3em; font-weight: bold; margin: 10px 0; }
-    .result .score.pass { color: #00ff88; }
-    .result .score.fail { color: #ff4444; }
-    .result .detail { background: #1a1a1a; border-radius: 8px; padding: 15px; margin: 10px 0; text-align: left; }
-    .result .detail a { color: #00bbff; }
-    
-    .loading { text-align: center; padding: 40px; }
-    .spinner { display: inline-block; width: 40px; height: 40px; border: 3px solid #333; border-top-color: #00ff88; border-radius: 50%; animation: spin 1s linear infinite; }
+    :root {
+      --ink:   #08090c;
+      --deep:  #0d1117;
+      --panel: #111620;
+      --card:  #0e1520;
+      --line:  #1e2535;
+      --green: #1db954;
+      --glow:  rgba(29,185,84,0.15);
+      --glowS: rgba(29,185,84,0.06);
+      --gold:  #c9a84c;
+      --goldS: rgba(201,168,76,0.1);
+      --white: #f0ece4;
+      --grey:  #5a6478;
+      --muted: #3a4255;
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--ink);
+      color: var(--white);
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── LAYOUT ── */
+    .app {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      min-height: 100vh;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      background: var(--deep);
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .sidebar-header {
+      padding: 28px 24px 20px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .sidebar-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3em;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .sidebar-logo span { color: var(--green); }
+
+    .student-info {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+
+    .si-name {
+      font-weight: 600;
+      font-size: 0.88em;
+      margin-bottom: 2px;
+    }
+
+    .si-grade {
+      font-size: 0.72em;
+      color: var(--grey);
+      margin-bottom: 10px;
+    }
+
+    .si-progress {
+      height: 4px;
+      background: var(--line);
+      border-radius: 100px;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+
+    .si-bar {
+      height: 100%;
+      background: var(--green);
+      border-radius: 100px;
+      transition: width 0.6s ease;
+    }
+
+    .si-prog-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.62em;
+      color: var(--grey);
+    }
+
+    .si-prog-label span { color: var(--green); }
+
+    /* Path navigation */
+    .path-label {
+      padding: 20px 24px 10px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.62em;
+      color: var(--grey);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .path-week {
+      margin-bottom: 4px;
+    }
+
+    .week-header {
+      padding: 8px 24px;
+      font-size: 0.72em;
+      color: var(--grey);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .week-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--line);
+      flex-shrink: 0;
+    }
+
+    .week-dot.done { background: var(--green); }
+    .week-dot.active {
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+    }
+
+    .lesson-nav-item {
+      padding: 10px 24px 10px 40px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: background 0.15s;
+      border-left: 2px solid transparent;
+    }
+
+    .lesson-nav-item:hover { background: rgba(255,255,255,0.025); }
+
+    .lesson-nav-item.active {
+      background: var(--glow);
+      border-left-color: var(--green);
+    }
+
+    .lesson-nav-item.locked {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .lni-icon {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6em;
+      flex-shrink: 0;
+    }
+
+    .lni-icon.done { background: var(--green); color: var(--ink); }
+    .lni-icon.active {
+      background: transparent;
+      border: 1.5px solid var(--green);
+      color: var(--green);
+    }
+    .lni-icon.locked {
+      background: var(--line);
+      color: var(--grey);
+    }
+
+    .lni-text {
+      font-size: 0.78em;
+      line-height: 1.3;
+    }
+
+    .lni-earn {
+      margin-left: auto;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6em;
+      color: var(--green);
+      flex-shrink: 0;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 20px 24px;
+      border-top: 1px solid var(--line);
+    }
+
+    .treasury-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .treasury-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6em;
+      color: var(--grey);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .treasury-val {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7em;
+      color: var(--green);
+    }
+
+    /* ── MAIN CONTENT ── */
+    .main {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* SCREENS */
+    .screen { display: none; flex-direction: column; flex: 1; }
+    .screen.active { display: flex; }
+
+    /* ── REGISTER SCREEN ── */
+    .register-screen {
+      justify-content: center;
+      align-items: center;
+      padding: 60px 48px;
+      min-height: 100vh;
+    }
+
+    .register-box {
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .reg-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68em;
+      color: var(--green);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .reg-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.4em;
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 12px;
+    }
+    .reg-title em { font-style: italic; color: var(--green); }
+
+    .reg-sub {
+      font-size: 0.85em;
+      color: var(--grey);
+      line-height: 1.6;
+      margin-bottom: 36px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.72em;
+      color: var(--grey);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .field input, .field select {
+      width: 100%;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px 16px;
+      color: var(--white);
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.9em;
+      outline: none;
+      transition: border-color 0.2s;
+      appearance: none;
+    }
+
+    .field input:focus, .field select:focus {
+      border-color: var(--green);
+    }
+
+    .field select option { background: var(--panel); }
+
+    .reg-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .btn-reg {
+      width: 100%;
+      background: var(--green);
+      color: var(--ink);
+      border: none;
+      border-radius: 100px;
+      padding: 16px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.92em;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .btn-reg:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-reg:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    .reg-note {
+      font-size: 0.68em;
+      color: var(--grey);
+      text-align: center;
+      margin-top: 14px;
+      line-height: 1.5;
+    }
+
+    /* ── LESSON SCREEN ── */
+    .lesson-screen {
+      flex-direction: column;
+    }
+
+    .lesson-header {
+      padding: 32px 48px 24px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .lh-left {}
+
+    .lh-breadcrumb {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65em;
+      color: var(--grey);
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+
+    .lh-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.9em;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+    .lh-title em { font-style: italic; color: var(--green); }
+
+    .lh-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .timer-badge {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8em;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: border-color 0.3s, color 0.3s;
+    }
+    .timer-badge.ready { border-color: rgba(29,185,84,0.4); color: var(--green); }
+
+    .timer-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--grey);
+      transition: background 0.3s;
+    }
+    .timer-badge.ready .timer-dot { background: var(--green); animation: pulse 1.5s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .earn-badge {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72em;
+      background: var(--glow);
+      border: 1px solid rgba(29,185,84,0.25);
+      color: var(--green);
+      border-radius: 8px;
+      padding: 6px 14px;
+    }
+
+    /* Lesson content */
+    .lesson-content {
+      padding: 40px 48px;
+      max-width: 760px;
+      line-height: 1.85;
+    }
+
+    .lesson-body {
+      font-size: 0.95em;
+      color: rgba(240,236,228,0.85);
+      font-weight: 300;
+      white-space: pre-wrap;
+    }
+
+    .lesson-body h2, .lesson-body h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 700;
+      color: var(--white);
+      margin: 28px 0 12px;
+    }
+
+    /* ── QUIZ SCREEN ── */
+    .quiz-screen {
+      flex-direction: column;
+    }
+
+    .quiz-header {
+      padding: 32px 48px 24px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .qh-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65em;
+      color: var(--green);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .qh-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.7em;
+      font-weight: 700;
+    }
+    .qh-title em { font-style: italic; color: var(--green); }
+
+    .quiz-body {
+      padding: 40px 48px;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .question-block {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .q-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.62em;
+      color: var(--grey);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .q-text {
+      font-size: 0.95em;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    .q-options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .q-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .q-option:hover { border-color: rgba(29,185,84,0.3); background: var(--glow); }
+
+    .q-option.selected {
+      border-color: var(--green);
+      background: var(--glow);
+    }
+
+    .q-option input[type="radio"] { display: none; }
+
+    .q-radio {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      border: 1.5px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: border-color 0.15s;
+    }
+
+    .q-option.selected .q-radio {
+      border-color: var(--green);
+      background: var(--green);
+    }
+
+    .q-option.selected .q-radio::after {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--ink);
+    }
+
+    .q-label { font-size: 0.88em; line-height: 1.4; }
+
+    .quiz-footer {
+      padding: 24px 48px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .quiz-progress {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7em;
+      color: var(--grey);
+    }
+    .quiz-progress span { color: var(--green); }
+
+    .btn-submit {
+      background: var(--green);
+      color: var(--ink);
+      border: none;
+      border-radius: 100px;
+      padding: 14px 36px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.88em;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .btn-submit:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-submit:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+    /* ── RESULT SCREEN ── */
+    .result-screen {
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 60px 48px;
+    }
+
+    .result-box {
+      width: 100%;
+      max-width: 540px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .result-icon {
+      font-size: 4em;
+      line-height: 1;
+    }
+
+    .result-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.4em;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+    .result-title em { font-style: italic; }
+    .result-title.pass em { color: var(--green); }
+    .result-title.fail em { color: var(--gold); }
+
+    .result-score {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.82em;
+      color: var(--grey);
+    }
+
+    .result-payment {
+      background: var(--glow);
+      border: 1px solid rgba(29,185,84,0.3);
+      border-radius: 14px;
+      padding: 24px 32px;
+      width: 100%;
+    }
+
+    .rp-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65em;
+      color: var(--grey);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 6px;
+    }
+
+    .rp-amount {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.2em;
+      font-weight: 700;
+      color: var(--green);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .rp-tx {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.62em;
+      color: var(--grey);
+      word-break: break-all;
+    }
+
+    .rp-tx a { color: var(--green); text-decoration: none; }
+
+    .result-nft {
+      background: var(--goldS);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 14px;
+      padding: 16px 24px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .rn-icon { font-size: 1.4em; }
+    .rn-text { text-align: left; }
+    .rn-title { font-size: 0.82em; font-weight: 600; margin-bottom: 2px; }
+    .rn-sub { font-size: 0.7em; color: var(--grey); }
+
+    .result-message {
+      font-size: 0.88em;
+      color: var(--grey);
+      line-height: 1.6;
+      max-width: 400px;
+    }
+
+    .result-next {
+      background: var(--green);
+      color: var(--ink);
+      border: none;
+      border-radius: 100px;
+      padding: 14px 36px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.9em;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .result-next:hover { opacity: 0.85; }
+
+    /* Status messages */
+    .status-msg {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72em;
+      padding: 10px 16px;
+      border-radius: 8px;
+      margin-top: 8px;
+    }
+    .status-msg.info { background: var(--glowS); color: var(--green); border: 1px solid rgba(29,185,84,0.2); }
+    .status-msg.error { background: rgba(255,80,80,0.06); color: #ff6b6b; border: 1px solid rgba(255,80,80,0.2); }
+
+    /* Scroll area */
+    .lesson-scroll {
+      flex: 1;
+      overflow-y: auto;
+    }
+    .quiz-scroll {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    /* ── LOADING STATE ── */
+    .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 16px;
+    }
+
+    .loading-spinner {
+      width: 40px; height: 40px;
+      border: 2px solid var(--line);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
-    
-    .back { display: inline-block; color: #888; text-decoration: none; margin-bottom: 20px; }
-    .back:hover { color: #fff; }
+
+    .loading-text {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72em;
+      color: var(--grey);
+    }
+
+    /* Lesson action bar */
+    .lesson-action {
+      padding: 24px 48px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--deep);
+    }
+
+    .la-note {
+      font-size: 0.78em;
+      color: var(--grey);
+      max-width: 300px;
+      line-height: 1.5;
+    }
+
+    .btn-take-quiz {
+      background: var(--green);
+      color: var(--ink);
+      border: none;
+      border-radius: 100px;
+      padding: 14px 36px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.92em;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .btn-take-quiz:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-take-quiz:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .lesson-header, .lesson-content, .lesson-action,
+      .quiz-header, .quiz-body, .quiz-footer,
+      .register-screen, .result-screen { padding-left: 24px; padding-right: 24px; }
+    }
   </style>
 </head>
 <body>
+<div class="app">
 
-  <div class="container">
-    <a href="/" class="back">← Back to Dashboard</a>
-    <h1>📚 Learn & Earn</h1>
-    <p class="subtitle">Learn something new. Get paid instantly.</p>
-
-    <!-- STEP 1: Register -->
-    <div class="step active" id="step1">
-      <h2>Step 1: Create Your Account</h2>
-      <input type="text" id="phoneEmail" placeholder="Enter phone number or email">
-      <button class="btn btn-go" onclick="register()">Create Account →</button>
-    </div>
-
-    <!-- STEP 2: Pick Topic -->
-    <div class="step" id="step2">
-      <h2>Step 2: Pick a Topic</h2>
-      <select id="topicSelect">
-        <option value="">Choose a topic...</option>
-        <option value="Clean Water Safety">Clean Water Safety</option>
-        <option value="Basic Math">Basic Math</option>
-        <option value="Reading Comprehension">Reading Comprehension</option>
-        <option value="Climate Change">Climate Change</option>
-        <option value="Personal Health">Personal Health</option>
-        <option value="Farming Basics">Farming Basics</option>
-        <option value="Financial Literacy">Financial Literacy</option>
-        <option value="World History">World History</option>
-        <option value="Basic Science">Basic Science</option>
-        <option value="Digital Literacy">Digital Literacy</option>
-        <option value="Nutrition">Nutrition</option>
-        <option value="Solar Energy">Solar Energy</option>
-        <option value="First Aid">First Aid</option>
-        <option value="Recycling">Recycling</option>
-        <option value="Animal Biology">Animal Biology</option>
-        <option value="Geography">Geography</option>
-        <option value="Electricity Basics">Electricity Basics</option>
-        <option value="Human Rights">Human Rights</option>
-        <option value="Internet Safety">Internet Safety</option>
-        <option value="Basic Coding">Basic Coding</option>
-      </select>
-      <button class="btn btn-go" onclick="startLesson()">Start Lesson →</button>
-    </div>
-
-    <!-- STEP 3: Lesson -->
-    <div class="step" id="step3">
-      <h2>Step 3: Read Your Lesson</h2>
-      <div class="lesson-content" id="lessonContent">Loading...</div>
-      <button class="btn btn-go" onclick="showQuiz()">Ready for the Quiz? →</button>
-    </div>
-
-    <!-- STEP 4: Quiz -->
-    <div class="step" id="step4">
-      <h2>Step 4: Answer the Quiz</h2>
-      <div class="timer" id="timer">⏱ 0:00</div>
-      <div id="quizContainer"></div>
-      <button class="btn btn-go" id="submitBtn" onclick="submitQuiz()" disabled>Submit Answers</button>
-    </div>
-
-    <!-- STEP 5: Result -->
-    <div class="step" id="step5">
-      <div class="result" id="resultContainer">Loading results...</div>
-    </div>
-
-    <!-- Loading overlay -->
-    <div class="step" id="loading">
-      <div class="loading">
-        <div class="spinner"></div>
-        <p style="margin-top:15px; color:#888;" id="loadingText">Generating your lesson...</p>
+  <!-- SIDEBAR — Journey Map -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="/" style="text-decoration:none">
+        <div class="sidebar-logo">Edu<span>Chain</span></div>
+      </a>
+      <div class="student-info" id="studentInfo" style="display:none">
+        <div class="si-name" id="siName">—</div>
+        <div class="si-grade" id="siGrade">—</div>
+        <div class="si-progress">
+          <div class="si-bar" id="siBar" style="width:0%"></div>
+        </div>
+        <div class="si-prog-label"><span id="siDone">0</span> of <span id="siTotal">10</span> lessons complete</div>
       </div>
     </div>
-  </div>
 
-  <script>
-    let walletAddress = null;
-    let currentQuiz = null;
-    let quizId = null;
-    let currentTopic = null;
-    let quizStartTime = null;
-    let timerInterval = null;
-    let answers = {};
+    <div class="path-label">Your learning path</div>
 
-    function showStep(num) {
-      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-      document.getElementById(num).classList.add('active');
+    <div id="pathNav">
+      <!-- Week 1 -->
+      <div class="path-week">
+        <div class="week-header">
+          <div class="week-dot active" id="w1dot"></div>
+          Week 1 · Foundations
+        </div>
+        <div class="lesson-nav-item active" data-lesson="1">
+          <div class="lni-icon active">▶</div>
+          <div class="lni-text">Today's Lesson</div>
+          <div class="lni-earn">+0.50</div>
+        </div>
+        <div class="lesson-nav-item locked" data-lesson="2">
+          <div class="lni-icon locked">🔒</div>
+          <div class="lni-text">Day 2</div>
+        </div>
+        <div class="lesson-nav-item locked" data-lesson="3">
+          <div class="lni-icon locked">🔒</div>
+          <div class="lni-text">Day 3</div>
+        </div>
+      </div>
+      <!-- Week 2 -->
+      <div class="path-week">
+        <div class="week-header">
+          <div class="week-dot"></div>
+          Week 2 · Building
+        </div>
+        <div class="lesson-nav-item locked" data-lesson="4">
+          <div class="lni-icon locked">🔒</div>
+          <div class="lni-text">Day 4</div>
+        </div>
+        <div class="lesson-nav-item locked" data-lesson="5">
+          <div class="lni-icon locked">🔒</div>
+          <div class="lni-text">Day 5</div>
+        </div>
+        <div class="lesson-nav-item locked" data-lesson="6">
+          <div class="lni-icon locked">🔒</div>
+          <div class="lni-text">Day 6</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="treasury-row">
+        <span class="treasury-label">Agent treasury</span>
+        <span class="treasury-val" id="treasury">—</span>
+      </div>
+      <div class="treasury-row">
+        <span class="treasury-label">Your earned</span>
+        <span class="treasury-val" id="earned">0 cUSD</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- REGISTER -->
+    <div class="screen active" id="screenRegister">
+      <div class="register-screen">
+        <div class="register-box">
+          <div class="reg-eyebrow">Start your journey</div>
+          <h1 class="reg-title">
+            Your first lesson<br>
+            is <em>waiting for you.</em>
+          </h1>
+          <p class="reg-sub">
+            Tell us a little about yourself. The agent will build your personal curriculum path — structured lessons matched to your age and grade, assigned one day at a time.
+          </p>
+
+          <div class="field">
+            <label>Your name</label>
+            <input type="text" id="regName" placeholder="First name" autocomplete="off">
+          </div>
+
+          <div class="reg-row">
+            <div class="field">
+              <label>Age</label>
+              <select id="regAge">
+                <option value="">Select age</option>
+                <option value="7">7 years old</option>
+                <option value="8">8 years old</option>
+                <option value="9">9 years old</option>
+                <option value="10">10 years old</option>
+                <option value="11">11 years old</option>
+                <option value="12">12 years old</option>
+                <option value="13">13 years old</option>
+                <option value="14">14 years old</option>
+                <option value="15">15 years old</option>
+                <option value="16">16 years old</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Grade level</label>
+              <select id="regGrade">
+                <option value="">Select grade</option>
+                <option value="primary_1">Primary 1</option>
+                <option value="primary_2">Primary 2</option>
+                <option value="primary_3">Primary 3</option>
+                <option value="primary_4">Primary 4</option>
+                <option value="primary_5">Primary 5</option>
+                <option value="primary_6">Primary 6</option>
+                <option value="jss_1">JSS 1</option>
+                <option value="jss_2">JSS 2</option>
+                <option value="jss_3">JSS 3</option>
+                <option value="sss_1">SSS 1</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Email or phone (for your wallet)</label>
+            <input type="text" id="regEmail" placeholder="you@example.com or +234..." autocomplete="off">
+          </div>
+
+          <button class="btn-reg" id="btnRegister" onclick="register()">
+            Begin My Learning Path →
+          </button>
+
+          <div id="regStatus"></div>
+
+          <p class="reg-note">
+            Your wallet is created automatically. You don't need any crypto knowledge.<br>
+            cUSD earned goes straight to your wallet the moment you pass.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOADING -->
+    <div class="screen" id="screenLoading">
+      <div class="loading-state">
+        <div class="loading-spinner"></div>
+        <div class="loading-text" id="loadingText">Assigning your lesson...</div>
+      </div>
+    </div>
+
+    <!-- LESSON -->
+    <div class="screen" id="screenLesson">
+      <div class="lesson-header">
+        <div class="lh-left">
+          <div class="lh-breadcrumb" id="lessonBreadcrumb">Week 1 · Day 1 · Foundations</div>
+          <h1 class="lh-title" id="lessonTitle">Today's <em>Lesson</em></h1>
+        </div>
+        <div class="lh-right">
+          <div class="timer-badge" id="timerBadge">
+            <div class="timer-dot" id="timerDot"></div>
+            <span id="timerText">Read for 3 min before quiz</span>
+          </div>
+          <div class="earn-badge">+0.50 cUSD on pass</div>
+        </div>
+      </div>
+
+      <div class="lesson-scroll">
+        <div class="lesson-content">
+          <div class="lesson-body" id="lessonBody">Loading your lesson...</div>
+        </div>
+      </div>
+
+      <div class="lesson-action">
+        <p class="la-note">Read carefully. The quiz tests what you just learned — not what you already knew.</p>
+        <button class="btn-take-quiz" id="btnQuiz" onclick="showQuiz()" disabled>
+          Take the Quiz →
+        </button>
+      </div>
+    </div>
+
+    <!-- QUIZ -->
+    <div class="screen" id="screenQuiz">
+      <div class="quiz-header">
+        <div class="qh-eyebrow">Prove what you learned</div>
+        <h2 class="qh-title">5 questions. Score 4 or 5 to <em>earn.</em></h2>
+      </div>
+
+      <div class="quiz-scroll">
+        <div class="quiz-body" id="quizBody">
+          <!-- Questions injected here -->
+        </div>
+      </div>
+
+      <div class="quiz-footer">
+        <div class="quiz-progress">
+          <span id="answeredCount">0</span> / 5 answered
+        </div>
+        <button class="btn-submit" id="btnSubmit" onclick="submitQuiz()" disabled>
+          Submit Answers →
+        </button>
+      </div>
+    </div>
+
+    <!-- RESULT -->
+    <div class="screen" id="screenResult">
+      <div class="result-screen">
+        <div class="result-box" id="resultBox">
+          <!-- Injected -->
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  // ── STATE ──
+  const state = {
+    student: null,
+    lesson: null,
+    quizStartTime: null,
+    answers: {},
+    totalEarned: 0
+  };
+
+  // ── SCREENS ──
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen' + id).classList.add('active');
+  }
+
+  // ── REGISTER ──
+  async function register() {
+    const name  = document.getElementById('regName').value.trim();
+    const age   = document.getElementById('regAge').value;
+    const grade = document.getElementById('regGrade').value;
+    const email = document.getElementById('regEmail').value.trim();
+
+    if (!name || !age || !grade || !email) {
+      showStatus('regStatus', 'Please fill in all fields.', 'error');
+      return;
     }
 
-    async function register() {
-      const phoneEmail = document.getElementById('phoneEmail').value.trim();
-      if (!phoneEmail) return alert('Please enter your phone or email');
+    const btn = document.getElementById('btnRegister');
+    btn.disabled = true;
+    btn.textContent = 'Registering...';
 
-      showStep('loading');
-      document.getElementById('loadingText').textContent = 'Creating your account...';
-
-      try {
-        const res = await fetch('/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phoneOrEmail: phoneEmail })
-        });
-        const data = await res.json();
-        walletAddress = data.walletAddress;
-        showStep('step2');
-      } catch (err) {
-        alert('Error: ' + err.message);
-        showStep('step1');
-      }
-    }
-
-    async function startLesson() {
-      const topic = document.getElementById('topicSelect').value;
-      if (!topic) return alert('Please pick a topic');
-      currentTopic = topic;
-
-      showStep('loading');
-      document.getElementById('loadingText').textContent = 'Generating your lesson...';
-
-      try {
-        const res = await fetch('/lesson', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ wallet: walletAddress, topic: topic })
-        });
-        const data = await res.json();
-
-        document.getElementById('lessonContent').textContent = data.lesson;
-        currentQuiz = data.quiz;
-        quizId = data.quizId;
-        quizStartTime = data.quizStartTime;
-
-        showStep('step3');
-      } catch (err) {
-        alert('Error: ' + err.message);
-        showStep('step2');
-      }
-    }
-
-    function showQuiz() {
-      const container = document.getElementById('quizContainer');
-      container.innerHTML = '';
-      answers = {};
-
-      currentQuiz.forEach((q, i) => {
-        const div = document.createElement('div');
-        div.className = 'quiz-question';
-        div.innerHTML = `<h3>Question ${i + 1}</h3><p>${q.question}</p>`;
-
-        Object.entries(q.options).forEach(([key, val]) => {
-          const opt = document.createElement('div');
-          opt.className = 'option';
-          opt.textContent = `${key}: ${val}`;
-          opt.onclick = () => {
-            div.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
-            opt.classList.add('selected');
-            answers[i] = key;
-            if (Object.keys(answers).length === 5) {
-              document.getElementById('submitBtn').disabled = false;
-            }
-          };
-          div.appendChild(opt);
-        });
-
-        container.appendChild(div);
+    try {
+      const res = await fetch('/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, age: parseInt(age), grade, email })
       });
 
-      // Start timer
-      let seconds = 0;
-      const timerEl = document.getElementById('timer');
-      timerInterval = setInterval(() => {
-        seconds++;
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        timerEl.textContent = `⏱ ${mins}:${secs.toString().padStart(2, '0')}`;
+      const d = await res.json();
+      if (!d.success) throw new Error(d.error || 'Registration failed');
 
-        if (seconds >= 180) {
-          timerEl.style.color = '#00ff88';
-        } else {
-          timerEl.style.color = '#ff8800';
-        }
-      }, 1000);
+      state.student = { name, age, grade, email, wallet: d.wallet };
+      updateSidebar();
+      loadLesson();
 
-      showStep('step4');
+    } catch (err) {
+      showStatus('regStatus', err.message, 'error');
+      btn.disabled = false;
+      btn.textContent = 'Begin My Learning Path →';
+    }
+  }
+
+  // ── LOAD LESSON ──
+  async function loadLesson() {
+    showScreen('Loading');
+    setLoading('Building your lesson for today...');
+
+    try {
+      const res = await fetch('/lesson', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: state.student.email,
+          age: state.student.age,
+          grade: state.student.grade
+        })
+      });
+
+      const d = await res.json();
+      if (!d.success) throw new Error(d.error || 'Failed to load lesson');
+
+      state.lesson = d;
+
+      // Set lesson UI
+      const gradeFmt = state.student.grade.replace('_', ' ').toUpperCase();
+      document.getElementById('lessonBreadcrumb').textContent =
+        `${gradeFmt} · ${d.subject || 'General Studies'} · Day ${d.lessonNumber || 1}`;
+
+      document.getElementById('lessonTitle').innerHTML =
+        `${d.topic || 'Today\'s'} <em>Lesson</em>`;
+
+      document.getElementById('lessonBody').textContent = d.content || d.lesson;
+
+      // Start reading timer — must read for 3 min before quiz unlocks
+      startReadTimer();
+      showScreen('Lesson');
+
+    } catch (err) {
+      setLoading('Error: ' + err.message);
+    }
+  }
+
+  // ── READING TIMER ──
+  let readTimerInterval;
+  let readSeconds = 0;
+  const READ_REQUIRED = 180; // 3 minutes
+
+  function startReadTimer() {
+    readSeconds = 0;
+    const badge  = document.getElementById('timerBadge');
+    const dot    = document.getElementById('timerDot');
+    const text   = document.getElementById('timerText');
+    const btn    = document.getElementById('btnQuiz');
+
+    state.quizStartTime = new Date().toISOString();
+
+    readTimerInterval = setInterval(() => {
+      readSeconds++;
+      const remaining = READ_REQUIRED - readSeconds;
+
+      if (remaining > 0) {
+        const mins = Math.floor(remaining / 60);
+        const secs = remaining % 60;
+        text.textContent = `Quiz unlocks in ${mins}:${secs.toString().padStart(2,'0')}`;
+      } else {
+        clearInterval(readTimerInterval);
+        badge.classList.add('ready');
+        text.textContent = 'Quiz ready — good luck';
+        btn.disabled = false;
+      }
+    }, 1000);
+  }
+
+  // ── SHOW QUIZ ──
+  function showQuiz() {
+    if (!state.lesson?.questions?.length) {
+      alert('Quiz not ready yet.');
+      return;
     }
 
-    async function submitQuiz() {
-      clearInterval(timerInterval);
+    state.answers = {};
+    updateAnswerCount();
 
-      const answerArray = [];
-      for (let i = 0; i < 5; i++) {
-        answerArray.push(answers[i] || 'A');
-      }
+    const body = document.getElementById('quizBody');
+    body.innerHTML = '';
 
-      showStep('loading');
-      document.getElementById('loadingText').textContent = 'Grading your quiz...';
+    state.lesson.questions.forEach((q, i) => {
+      const block = document.createElement('div');
+      block.className = 'question-block';
+      block.innerHTML = `
+        <div class="q-num">Question ${i + 1} of 5</div>
+        <div class="q-text">${q.question}</div>
+        <div class="q-options">
+          ${q.options.map((opt, j) => `
+            <label class="q-option" id="opt-${i}-${j}">
+              <input type="radio" name="q${i}" value="${j}" onchange="selectAnswer(${i}, ${j}, this)">
+              <div class="q-radio"></div>
+              <span class="q-label">${opt}</span>
+            </label>
+          `).join('')}
+        </div>
+      `;
+      body.appendChild(block);
+    });
 
-      try {
-        const res = await fetch('/submit-quiz', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            wallet: walletAddress,
-            quizId: quizId,
-            topic: currentTopic,
-            answers: answerArray,
-            quizStartTime: quizStartTime
-          })
-        });
-        const data = await res.json();
+    showScreen('Quiz');
+  }
 
-        const container = document.getElementById('resultContainer');
-        const passed = data.passed;
+  function selectAnswer(qi, vi, input) {
+    // Deselect siblings
+    document.querySelectorAll(`[id^="opt-${qi}-"]`).forEach(l => l.classList.remove('selected'));
+    document.getElementById(`opt-${qi}-${vi}`).classList.add('selected');
+    state.answers[qi] = input.value;
+    updateAnswerCount();
+  }
 
-        container.innerHTML = `
-          <div class="score ${passed ? 'pass' : 'fail'}">${passed ? '✅' : '❌'} ${data.score}/${data.outOf}</div>
-          <p style="font-size:1.2em; margin:10px 0;">${data.feedback}</p>
-          ${passed ? `
-            <div class="detail">
-              💰 <strong>${data.payment}</strong> sent to your wallet<br>
-              ${data.paymentTx ? `📄 <a href="https://sepolia.basescan.org/tx/${data.paymentTx}" target="_blank">View on BaseScan</a><br>` : ''}
-              ${data.filecoin ? `🗂️ <a href="${data.filecoin}" target="_blank">View on IPFS</a><br>` : ''}
-              ${data.nftTokenId !== null ? `🖼️ Impact NFT #${data.nftTokenId} minted<br>` : ''}
-              <br><span style="color:#00ff88;">humanInvolved: false ✓</span>
-            </div>
-          ` : `
-            <div class="detail">
-              <p>Keep studying and try again tomorrow!</p>
-              <br><span style="color:#00ff88;">humanInvolved: false ✓</span>
-            </div>
-          `}
-          <br>
-          <a href="/learn" class="btn btn-go">Learn Another Topic →</a>
-          <a href="/" class="btn btn-go" style="background:#1a1a1a; color:#fff; border:1px solid #333;">Back to Dashboard</a>
-        `;
+  function updateAnswerCount() {
+    const count = Object.keys(state.answers).length;
+    document.getElementById('answeredCount').textContent = count;
+    document.getElementById('btnSubmit').disabled = count < 5;
+  }
 
-        showStep('step5');
-      } catch (err) {
-        alert('Error: ' + err.message);
-        showStep('step4');
-      }
+  // ── SUBMIT QUIZ ──
+  async function submitQuiz() {
+    const btn = document.getElementById('btnSubmit');
+    btn.disabled = true;
+    btn.textContent = 'Grading...';
+
+    showScreen('Loading');
+    setLoading('Grading your answers...');
+
+    const answers = [0,1,2,3,4].map(i => {
+      const v = state.answers[i];
+      return v !== undefined ? state.lesson.questions[i].options[parseInt(v)] : '';
+    });
+
+    try {
+      const res = await fetch('/submit-quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: state.student.email,
+          lessonId: state.lesson.lessonId,
+          answers,
+          quizStartTime: state.quizStartTime
+        })
+      });
+
+      const d = await res.json();
+      showResult(d);
+
+    } catch (err) {
+      showResult({ passed: false, score: 0, error: err.message });
     }
-  </script>
+  }
 
+  // ── RESULT ──
+  function showResult(d) {
+    const box = document.getElementById('resultBox');
+    const passed = d.passed;
+    const score  = d.score || 0;
+
+    if (passed) state.totalEarned += 0.5;
+    updateSidebar();
+
+    if (passed) {
+      box.innerHTML = `
+        <div class="result-icon">🎓</div>
+        <h2 class="result-title pass">You <em>earned this.</em></h2>
+        <div class="result-score">${score} out of 5 correct</div>
+        <div class="result-payment">
+          <div class="rp-label">Payment sent to your wallet</div>
+          <div class="rp-amount">${d.amountPaid || '0.50 cUSD'}</div>
+          ${d.txHash ? `<div class="rp-tx">TX: <a href="https://sepolia.basescan.org/tx/${d.txHash}" target="_blank">${d.txHash.slice(0,20)}...${d.txHash.slice(-8)}</a></div>` : ''}
+        </div>
+        ${d.nftMinted ? `
+        <div class="result-nft">
+          <div class="rn-icon">🖼️</div>
+          <div class="rn-text">
+            <div class="rn-title">Impact NFT minted</div>
+            <div class="rn-sub">Permanent proof of this lesson on-chain</div>
+          </div>
+        </div>` : ''}
+        <p class="result-message">
+          This wasn't given to you. You read the lesson, answered the questions, and proved you understood.
+          The cUSD is already in your wallet. Come back tomorrow for your next lesson.
+        </p>
+        <button class="result-next" onclick="showScreen('Register')">← Back to home</button>
+      `;
+    } else if (d.suspicious) {
+      box.innerHTML = `
+        <div class="result-icon">⚠️</div>
+        <h2 class="result-title fail">Too <em>fast.</em></h2>
+        <div class="result-score">Quiz completed before reading time finished</div>
+        <p class="result-message">
+          The agent noticed something unusual. The quiz was answered before the lesson could have been read.
+          Come back and try again — read carefully this time.
+        </p>
+        <button class="result-next" onclick="loadLesson()">Try Again</button>
+      `;
+    } else {
+      box.innerHTML = `
+        <div class="result-icon">📖</div>
+        <h2 class="result-title fail">Not quite. <em>Try again.</em></h2>
+        <div class="result-score">${score} out of 5 — need 4 to pass</div>
+        <p class="result-message">
+          You need 4 or 5 to earn. Go back, read the lesson again more carefully,
+          and take the quiz a second time. You can do this.
+        </p>
+        <button class="result-next" onclick="showScreen('Lesson')">← Back to Lesson</button>
+      `;
+    }
+
+    showScreen('Result');
+  }
+
+  // ── UI HELPERS ──
+  function setLoading(msg) {
+    document.getElementById('loadingText').textContent = msg;
+  }
+
+  function showStatus(id, msg, type) {
+    const el = document.getElementById(id);
+    el.innerHTML = `<div class="status-msg ${type}">${msg}</div>`;
+  }
+
+  function updateSidebar() {
+    if (!state.student) return;
+    const info = document.getElementById('studentInfo');
+    info.style.display = 'block';
+    document.getElementById('siName').textContent = state.student.name;
+    document.getElementById('siGrade').textContent =
+      state.student.grade.replace('_', ' ').toUpperCase() + ' · Age ' + state.student.age;
+    document.getElementById('earned').textContent = state.totalEarned.toFixed(2) + ' cUSD';
+  }
+
+  // Treasury
+  async function loadTreasury() {
+    try {
+      const r = await fetch('/status');
+      const d = await r.json();
+      if (d.treasury) document.getElementById('treasury').textContent = d.treasury + ' cUSD';
+    } catch { document.getElementById('treasury').textContent = '—'; }
+  }
+  loadTreasury();
+</script>
 </body>
 </html>

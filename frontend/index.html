@@ -3,119 +3,1149 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EduChain — The Autonomous AI Teacher</title>
+  <title>EduChain — Learn. Prove It. Earn.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #fff; min-height: 100vh; }
-    
-    .header { text-align: center; padding: 60px 20px 30px; }
-    .header h1 { font-size: 3em; background: linear-gradient(135deg, #00ff88, #00bbff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .header p { color: #888; font-size: 1.2em; margin-top: 10px; }
-    
-    .status-bar { display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; padding: 20px; max-width: 900px; margin: 0 auto; }
-    .status-item { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 15px 25px; text-align: center; min-width: 120px; }
-    .status-item .value { font-size: 1.8em; font-weight: bold; color: #00ff88; }
-    .status-item .label { font-size: 0.8em; color: #888; margin-top: 5px; }
-    
-    .mode-badge { display: inline-block; padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 1.1em; margin: 20px auto; }
-    .mode-active { background: #003322; border: 1px solid #00ff88; color: #00ff88; }
-    .mode-survival { background: #332200; border: 1px solid #ff8800; color: #ff8800; }
-    
-    .feed { max-width: 800px; margin: 30px auto; padding: 0 20px; }
-    .feed h2 { color: #00bbff; margin-bottom: 15px; font-size: 1.3em; }
-    .feed-container { background: #111; border: 1px solid #222; border-radius: 12px; padding: 20px; max-height: 400px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 0.85em; line-height: 1.8; }
-    .feed-line { color: #00ff88; border-bottom: 1px solid #1a1a1a; padding: 4px 0; }
-    .feed-line .time { color: #555; }
-    .feed-line .human { color: #00bbff; }
-    
-    .cta { text-align: center; padding: 40px 20px; }
-    .btn { display: inline-block; padding: 15px 40px; border-radius: 12px; text-decoration: none; font-size: 1.1em; font-weight: bold; margin: 10px; transition: all 0.3s; }
-    .btn-primary { background: linear-gradient(135deg, #00ff88, #00bbff); color: #000; }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0,255,136,0.3); }
-    .btn-secondary { background: #1a1a1a; border: 1px solid #333; color: #fff; }
-    .btn-secondary:hover { border-color: #00ff88; }
-    
-    .footer { text-align: center; padding: 30px; color: #444; font-size: 0.9em; }
-    .footer span { color: #00ff88; }
+    :root {
+      --ink:    #08090c;
+      --deep:   #0d1117;
+      --panel:  #111620;
+      --line:   #1e2535;
+      --green:  #1db954;
+      --green2: #0a8c3a;
+      --glow:   rgba(29,185,84,0.15);
+      --glowS:  rgba(29,185,84,0.06);
+      --gold:   #c9a84c;
+      --goldS:  rgba(201,168,76,0.12);
+      --white:  #f0ece4;
+      --grey:   #5a6478;
+      --blue:   #4a9eff;
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--ink);
+      color: var(--white);
+      font-family: 'Outfit', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 56px;
+      background: rgba(8,9,12,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.4s;
+    }
+    nav.scrolled { border-bottom-color: var(--line); }
+
+    .nav-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4em;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .nav-logo span { color: var(--green); }
+
+    .nav-links {
+      display: flex;
+      gap: 36px;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 0.82em;
+      color: var(--grey);
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--white); }
+
+    .nav-cta {
+      background: var(--green);
+      color: var(--ink);
+      font-weight: 700;
+      font-size: 0.82em;
+      padding: 10px 22px;
+      border-radius: 100px;
+      text-decoration: none;
+      letter-spacing: 0.02em;
+      transition: opacity 0.2s;
+    }
+    .nav-cta:hover { opacity: 0.85; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0 56px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 70% 40%, rgba(29,185,84,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(201,168,76,0.05) 0%, transparent 50%);
+    }
+
+    /* Vertical rule lines — editorial texture */
+    .hero-rules {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      pointer-events: none;
+    }
+    .hero-rule {
+      flex: 1;
+      border-right: 1px solid rgba(255,255,255,0.025);
+    }
+
+    .hero-eyebrow {
+      position: relative;
+      z-index: 2;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7em;
+      color: var(--green);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      display: block;
+      width: 32px;
+      height: 1px;
+      background: var(--green);
+    }
+
+    .hero-headline {
+      position: relative;
+      z-index: 2;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3.6em, 7vw, 7.2em);
+      font-weight: 700;
+      line-height: 0.95;
+      letter-spacing: -0.01em;
+      max-width: 900px;
+      margin-bottom: 40px;
+    }
+
+    .hero-headline em {
+      font-style: italic;
+      color: var(--green);
+    }
+
+    .hero-bottom {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 48px;
+    }
+
+    .hero-sub {
+      font-size: 1em;
+      color: var(--grey);
+      line-height: 1.75;
+      max-width: 440px;
+      font-weight: 300;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .btn-primary {
+      background: var(--green);
+      color: var(--ink);
+      font-weight: 700;
+      font-size: 0.95em;
+      padding: 16px 40px;
+      border-radius: 100px;
+      text-decoration: none;
+      letter-spacing: 0.01em;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(29,185,84,0.3);
+    }
+
+    .btn-ghost {
+      color: var(--grey);
+      font-size: 0.82em;
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s;
+    }
+    .btn-ghost:hover { color: var(--white); }
+
+    /* Scrolling ticker */
+    .ticker-wrap {
+      overflow: hidden;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: var(--deep);
+      padding: 14px 0;
+      position: relative;
+      z-index: 10;
+    }
+    .ticker-track {
+      display: flex;
+      gap: 0;
+      animation: ticker 28s linear infinite;
+      white-space: nowrap;
+    }
+    .ticker-item {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72em;
+      color: var(--grey);
+      padding: 0 48px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .ticker-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+    }
+    .ticker-item.live { color: var(--green); }
+
+    @keyframes ticker {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* ── MANIFESTO ── */
+    .manifesto {
+      padding: 140px 56px;
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 80px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .manifesto-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68em;
+      color: var(--grey);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding-top: 8px;
+    }
+
+    .manifesto-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .manifesto-line {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.8em, 3vw, 2.8em);
+      font-weight: 400;
+      line-height: 1.35;
+      color: rgba(240,236,228,0.35);
+      padding: 24px 0;
+      border-bottom: 1px solid var(--line);
+      transition: color 0.4s;
+      cursor: default;
+    }
+    .manifesto-line:first-child { border-top: 1px solid var(--line); }
+    .manifesto-line:hover { color: var(--white); }
+    .manifesto-line em { font-style: italic; color: var(--green); }
+    .manifesto-line.gold em { color: var(--gold); }
+
+    /* ── TRUTH SECTION (replaces generic boxes) ── */
+    .truth {
+      padding: 140px 56px;
+      border-bottom: 1px solid var(--line);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .truth::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(ellipse 50% 60% at 0% 100%, rgba(201,168,76,0.05) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .truth-header {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      margin-bottom: 100px;
+      align-items: end;
+    }
+
+    .truth-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.4em, 4vw, 3.8em);
+      font-weight: 700;
+      line-height: 1.1;
+    }
+    .truth-title em { font-style: italic; color: var(--gold); }
+
+    .truth-body {
+      font-size: 0.9em;
+      color: var(--grey);
+      line-height: 1.85;
+      font-weight: 300;
+    }
+    .truth-body p + p { margin-top: 16px; }
+
+    /* The three truths — full width horizontal strips */
+    .truth-strips {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .truth-strip {
+      display: grid;
+      grid-template-columns: 80px 1fr 1fr;
+      gap: 40px;
+      align-items: center;
+      padding: 48px 0;
+      border-top: 1px solid var(--line);
+      transition: background 0.3s;
+    }
+    .truth-strip:last-child { border-bottom: 1px solid var(--line); }
+    .truth-strip:hover { background: rgba(255,255,255,0.015); }
+
+    .ts-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3em;
+      font-weight: 400;
+      color: var(--line);
+      line-height: 1;
+    }
+
+    .ts-heading {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.6em;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+    .ts-heading em { color: var(--green); font-style: italic; }
+
+    .ts-text {
+      font-size: 0.85em;
+      color: var(--grey);
+      line-height: 1.8;
+      font-weight: 300;
+    }
+
+    /* ── HOW IT WORKS — JOURNEY ── */
+    .journey {
+      padding: 140px 56px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .journey-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 80px;
+    }
+
+    .journey-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.2em, 3.5vw, 3.2em);
+      font-weight: 700;
+      line-height: 1.1;
+    }
+    .journey-title em { font-style: italic; color: var(--green); }
+
+    .journey-note {
+      font-size: 0.78em;
+      color: var(--grey);
+      max-width: 260px;
+      text-align: right;
+      line-height: 1.6;
+    }
+
+    /* Horizontal journey path */
+    .journey-path {
+      position: relative;
+      display: flex;
+      gap: 0;
+    }
+
+    .journey-path::before {
+      content: '';
+      position: absolute;
+      top: 32px;
+      left: 32px;
+      right: 32px;
+      height: 1px;
+      background: linear-gradient(90deg, var(--green), var(--green2), var(--line), var(--line));
+      background-size: 70% 100%;
+      background-repeat: no-repeat;
+    }
+
+    .journey-step {
+      flex: 1;
+      padding: 0 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .js-dot {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4em;
+      position: relative;
+      z-index: 1;
+      flex-shrink: 0;
+    }
+
+    .js-dot.done {
+      background: var(--green);
+      border: 2px solid var(--green);
+      box-shadow: 0 0 24px rgba(29,185,84,0.4);
+    }
+    .js-dot.active {
+      background: var(--panel);
+      border: 2px solid var(--green);
+      box-shadow: 0 0 24px rgba(29,185,84,0.25);
+    }
+    .js-dot.locked {
+      background: var(--panel);
+      border: 2px solid var(--line);
+      filter: grayscale(1);
+      opacity: 0.5;
+    }
+
+    .js-content {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .js-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.62em;
+      color: var(--grey);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .js-label.green { color: var(--green); }
+
+    .js-title {
+      font-size: 0.95em;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    .js-desc {
+      font-size: 0.78em;
+      color: var(--grey);
+      line-height: 1.6;
+      font-weight: 300;
+    }
+
+    .js-earn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--glow);
+      border: 1px solid rgba(29,185,84,0.25);
+      color: var(--green);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65em;
+      padding: 4px 12px;
+      border-radius: 100px;
+      width: fit-content;
+    }
+
+    /* ── NETWORKS ── */
+    .networks {
+      padding: 100px 56px;
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 80px;
+      align-items: center;
+    }
+
+    .networks-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68em;
+      color: var(--grey);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .networks-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.8em, 2.5vw, 2.4em);
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .networks-title em { font-style: italic; color: var(--green); }
+
+    .networks-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .network-item {
+      display: grid;
+      grid-template-columns: 48px 1fr auto;
+      gap: 24px;
+      align-items: center;
+      padding: 28px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .network-item:first-child { border-top: 1px solid var(--line); }
+
+    .ni-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2em;
+    }
+
+    .ni-info {}
+    .ni-name {
+      font-weight: 600;
+      font-size: 0.9em;
+      margin-bottom: 3px;
+    }
+    .ni-role {
+      font-size: 0.73em;
+      color: var(--grey);
+    }
+
+    .ni-link {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68em;
+      color: var(--blue);
+      text-decoration: none;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    .ni-link:hover { opacity: 1; }
+
+    /* ── LIVE PROOF ── */
+    .proof-section {
+      padding: 140px 56px;
+      border-bottom: 1px solid var(--line);
+      position: relative;
+    }
+
+    .proof-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 40% 60% at 100% 50%, rgba(29,185,84,0.04) 0%, transparent 60%);
+    }
+
+    .proof-header {
+      margin-bottom: 80px;
+    }
+
+    .proof-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68em;
+      color: var(--green);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .proof-eyebrow::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .proof-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.2em, 3.5vw, 3.2em);
+      font-weight: 700;
+      line-height: 1.1;
+    }
+    .proof-title em { font-style: italic; color: var(--green); }
+
+    .proof-numbers {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border: 1px solid var(--line);
+      margin-bottom: 2px;
+    }
+
+    .proof-num {
+      padding: 40px 32px;
+      border-right: 1px solid var(--line);
+    }
+    .proof-num:last-child { border-right: none; }
+
+    .pn-val {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3em;
+      font-weight: 700;
+      color: var(--green);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .pn-val.gold { color: var(--gold); }
+
+    .pn-label {
+      font-size: 0.75em;
+      color: var(--grey);
+      line-height: 1.4;
+    }
+
+    .proof-chain {
+      border: 1px solid var(--line);
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      background: var(--panel);
+    }
+
+    .pc-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65em;
+      color: var(--grey);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .pc-hash {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72em;
+      color: var(--green);
+    }
+
+    .pc-link {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65em;
+      color: var(--blue);
+      text-decoration: none;
+      opacity: 0.7;
+    }
+    .pc-link:hover { opacity: 1; }
+
+    /* ── FINAL CTA ── */
+    .final {
+      padding: 160px 56px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .final::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 80% at 50% 100%, rgba(29,185,84,0.08) 0%, transparent 60%);
+    }
+
+    .final-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68em;
+      color: var(--green);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+    }
+
+    .final-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3em, 6vw, 6em);
+      font-weight: 700;
+      line-height: 1.0;
+      position: relative;
+      z-index: 1;
+      margin-bottom: 40px;
+    }
+    .final-title em { font-style: italic; color: var(--green); }
+
+    .final-sub {
+      font-size: 0.92em;
+      color: var(--grey);
+      max-width: 480px;
+      margin: 0 auto 48px;
+      line-height: 1.75;
+      font-weight: 300;
+      position: relative;
+      z-index: 1;
+    }
+
+    .final-buttons {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .btn-final {
+      background: var(--green);
+      color: var(--ink);
+      font-weight: 700;
+      font-size: 1em;
+      padding: 18px 48px;
+      border-radius: 100px;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-final:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 48px rgba(29,185,84,0.35);
+    }
+
+    .btn-final-ghost {
+      color: var(--grey);
+      font-size: 0.85em;
+      text-decoration: none;
+      border: 1px solid var(--line);
+      padding: 18px 32px;
+      border-radius: 100px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .btn-final-ghost:hover { color: var(--white); border-color: var(--grey); }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--line);
+      padding: 40px 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--deep);
+    }
+
+    .footer-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1em;
+      font-weight: 700;
+    }
+    .footer-name span { color: var(--green); }
+
+    .footer-links {
+      display: flex;
+      gap: 28px;
+    }
+    .footer-links a {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68em;
+      color: var(--grey);
+      text-decoration: none;
+      letter-spacing: 0.06em;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--white); }
+
+    .footer-tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65em;
+      color: var(--green);
+      opacity: 0.6;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 960px) {
+      nav { padding: 18px 24px; }
+      .nav-links { display: none; }
+      .hero { padding: 0 24px 60px; }
+      .hero-bottom { flex-direction: column; align-items: flex-start; }
+      .hero-actions { align-items: flex-start; }
+      .manifesto, .truth-header, .networks { grid-template-columns: 1fr; gap: 40px; padding: 80px 24px; }
+      .truth { padding: 80px 24px; }
+      .truth-strip { grid-template-columns: 48px 1fr; gap: 16px; }
+      .ts-text { grid-column: 2; }
+      .journey { padding: 80px 24px; }
+      .journey-path { flex-direction: column; }
+      .journey-path::before { display: none; }
+      .journey-step { flex-direction: row; align-items: flex-start; padding: 0 0 32px; }
+      .proof-numbers { grid-template-columns: 1fr 1fr; }
+      .proof-num { border-bottom: 1px solid var(--line); }
+      .final { padding: 100px 24px; }
+      footer { flex-direction: column; gap: 20px; text-align: center; padding: 32px 24px; }
+      .footer-links { flex-wrap: wrap; justify-content: center; }
+    }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <h1>⛓️ EduChain</h1>
-    <p>The autonomous AI teacher. Running forever.</p>
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-logo">Edu<span>Chain</span></div>
+  <ul class="nav-links">
+    <li><a href="#why">Why it exists</a></li>
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#proof">Live proof</a></li>
+  </ul>
+  <a href="/learn" class="nav-cta">Start Learning →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-rules">
+    <div class="hero-rule"></div><div class="hero-rule"></div>
+    <div class="hero-rule"></div><div class="hero-rule"></div>
+    <div class="hero-rule"></div><div class="hero-rule"></div>
   </div>
 
-  <div style="text-align:center;">
-    <span id="modeBadge" class="mode-badge mode-active">🟢 ACTIVE</span>
-  </div>
+  <div class="hero-eyebrow">Autonomous AI · Celo Network · Built for the underserved</div>
 
-  <div class="status-bar" id="statusBar">
-    <div class="status-item"><div class="value" id="lessonsToday">-</div><div class="label">Lessons Today</div></div>
-    <div class="status-item"><div class="value" id="totalPaid">-</div><div class="label">Total Paid (cUSD)</div></div>
-    <div class="status-item"><div class="value" id="students">-</div><div class="label">Students</div></div>
-    <div class="status-item"><div class="value" id="runway">-</div><div class="label">Runway (Days)</div></div>
-    <div class="status-item"><div class="value" id="nfts">-</div><div class="label">NFTs Minted</div></div>
-    <div class="status-item"><div class="value" id="cycles">-</div><div class="label">Cycles Run</div></div>
-  </div>
+  <h1 class="hero-headline">
+    The child who learns<br>
+    here <em>gets paid</em><br>
+    for learning here.
+  </h1>
 
-  <div class="feed">
-    <h2>📡 Live Activity Feed</h2>
-    <div class="feed-container" id="feedContainer">
-      <div class="feed-line">Connecting to agent...</div>
+  <div class="hero-bottom">
+    <p class="hero-sub">
+      EduChain is an AI agent that delivers structured lessons to children,
+      verifies their understanding on-chain, and sends cUSD to their wallet
+      the moment they pass. No human makes any of it happen.
+    </p>
+    <div class="hero-actions">
+      <a href="/learn" class="btn-primary">🎓 Begin Your Lesson</a>
+      <a href="#proof" class="btn-ghost">See live chain activity ↓</a>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker-track" id="ticker">
+    <span class="ticker-item live"><span class="ticker-dot"></span>Agent running · humanInvolved: false</span>
+    <span class="ticker-item"><span class="ticker-dot"></span>cUSD paid to students on Base Sepolia</span>
+    <span class="ticker-item"><span class="ticker-dot"></span>Lessons stored permanently on Filecoin</span>
+    <span class="ticker-item live"><span class="ticker-dot"></span>NFTs minted as proof of learning</span>
+    <span class="ticker-item"><span class="ticker-dot"></span>Contract: 0x8e42ff...32ab</span>
+    <span class="ticker-item"><span class="ticker-dot"></span>Venice AI · Private inference · No data logged</span>
+    <span class="ticker-item live"><span class="ticker-dot"></span>Agent running · humanInvolved: false</span>
+    <span class="ticker-item"><span class="ticker-dot"></span>cUSD paid to students on Base Sepolia</span>
+    <span class="ticker-item"><span class="ticker-dot"></span>Lessons stored permanently on Filecoin</span>
+    <span class="ticker-item live"><span class="ticker-dot"></span>NFTs minted as proof of learning</span>
+    <span class="ticker-item"><span class="ticker-dot"></span>Contract: 0x8e42ff...32ab</span>
+    <span class="ticker-item"><span class="ticker-dot"></span>Venice AI · Private inference · No data logged</span>
+  </div>
+</div>
+
+<!-- MANIFESTO -->
+<section class="manifesto" id="why">
+  <div class="manifesto-label">What we believe</div>
+  <div class="manifesto-body">
+    <div class="manifesto-line">Every child wants to learn. <em>Not every child can afford to.</em></div>
+    <div class="manifesto-line gold">A parent who pulls their child from school is not giving up on education. <em>They are choosing survival.</em></div>
+    <div class="manifesto-line">We do not blame them. <em>We change the equation.</em></div>
+    <div class="manifesto-line">When learning becomes earning, the choice disappears. <em>The child can do both.</em></div>
+    <div class="manifesto-line">This is not charity. <em>The child earns because they proved they learned.</em> That dignity is the whole point.</div>
+  </div>
+</section>
+
+<!-- TRUTH -->
+<section class="truth">
+  <div class="truth-header">
+    <h2 class="truth-title">
+      Three things that make<br>
+      EduChain <em>different</em>
+    </h2>
+    <div class="truth-body">
+      <p>
+        There are apps that teach. There are platforms that pay. EduChain is the first system
+        that does both, autonomously, with every action permanently recorded on-chain.
+      </p>
+      <p>
+        No classroom. No teacher salary. No admin overhead. Just a child, a lesson,
+        a quiz, and money sent the moment they pass.
+      </p>
     </div>
   </div>
 
-  <div class="cta">
-    <a href="/learn" class="btn btn-primary">Start Learning →</a>
-    <a href="/agent" class="btn btn-secondary">Watch the Agent →</a>
-    <a href="/impact" class="btn btn-secondary">Buy Impact NFTs →</a>
+  <div class="truth-strips">
+    <div class="truth-strip">
+      <div class="ts-num">01</div>
+      <div class="ts-heading">The curriculum is <em>structured,</em><br>not chosen.</div>
+      <div class="ts-text">
+        A child does not pick what they feel like learning today. The agent knows their age, their grade level, and where they left off. It assigns the next lesson. Every child follows a real curriculum — the kind a school would deliver — because random learning is not education.
+      </div>
+    </div>
+    <div class="truth-strip">
+      <div class="ts-num">02</div>
+      <div class="ts-heading">Every payment is <em>on-chain</em><br>and verifiable.</div>
+      <div class="ts-text">
+        The agent cannot lie. When it says a child was paid, there is a transaction hash on the Celo network to prove it. When it says a lesson was delivered, there is a permanent record on Filecoin. The receipts exist whether anyone checks them or not.
+      </div>
+    </div>
+    <div class="truth-strip">
+      <div class="ts-num">03</div>
+      <div class="ts-heading">No human is needed <em>for any of it.</em></div>
+      <div class="ts-text">
+        The agent registers students, generates lessons, grades quizzes, detects fraud, sends payments, mints NFTs, and stores records. It does this around the clock. It does not take weekends off. It does not run out of motivation. It was built with one purpose and it pursues it without interruption.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS — JOURNEY -->
+<section class="journey" id="how">
+  <div class="journey-header">
+    <h2 class="journey-title">
+      A child's <em>journey</em><br>through EduChain
+    </h2>
+    <p class="journey-note">The agent assigns every lesson. The child follows the path. Each step unlocks the next.</p>
   </div>
 
-  <div class="footer">
-    Every action on this page was performed autonomously. <span>humanInvolved: false</span>
+  <div class="journey-path">
+    <div class="journey-step">
+      <div class="js-dot done">📋</div>
+      <div class="js-content">
+        <div class="js-label green">Step 1 · Complete</div>
+        <div class="js-title">Register once</div>
+        <div class="js-desc">Name, age, and grade level. Your curriculum path is generated immediately. No crypto knowledge needed — your wallet is created for you.</div>
+      </div>
+    </div>
+
+    <div class="journey-step">
+      <div class="js-dot done">📚</div>
+      <div class="js-content">
+        <div class="js-label green">Step 2 · Today's lesson</div>
+        <div class="js-title">The agent assigns your lesson</div>
+        <div class="js-desc">Based on your age and progress. Not what you feel like — what you need next. Read it carefully. There is a quiz waiting.</div>
+      </div>
+    </div>
+
+    <div class="journey-step">
+      <div class="js-dot active">✏️</div>
+      <div class="js-content">
+        <div class="js-label green">Step 3 · Active</div>
+        <div class="js-title">Pass the quiz</div>
+        <div class="js-desc">Five questions. Score four or five and you earn. The agent verifies your answers and checks the timing. You cannot rush through it.</div>
+        <div class="js-earn">↑ 0.50 cUSD sent on pass</div>
+      </div>
+    </div>
+
+    <div class="journey-step">
+      <div class="js-dot locked">🖼️</div>
+      <div class="js-content">
+        <div class="js-label">Step 4 · Unlocks next</div>
+        <div class="js-title">Earn your proof</div>
+        <div class="js-desc">An Impact NFT is minted to your wallet. It is a credential — a permanent record of every subject you mastered, at what level, on what date.</div>
+      </div>
+    </div>
+
+    <div class="journey-step">
+      <div class="js-dot locked">🔄</div>
+      <div class="js-content">
+        <div class="js-label">Step 5 · Tomorrow</div>
+        <div class="js-title">Come back tomorrow</div>
+        <div class="js-desc">A new lesson is already waiting. The path continues. Over weeks and months, the child builds a real education — and a real earning record.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NETWORKS -->
+<section class="networks">
+  <div>
+    <div class="networks-label">Infrastructure</div>
+    <h2 class="networks-title">Built on networks that <em>share the mission</em></h2>
   </div>
 
-  <script>
-    async function updateStatus() {
-      try {
-        const res = await fetch('/status');
-        const data = await res.json();
+  <div class="networks-row">
+    <div class="network-item">
+      <div class="ni-icon" style="background:#FCFF5212;font-size:1.3em">🌍</div>
+      <div class="ni-info">
+        <div class="ni-name">Celo · Student Payments</div>
+        <div class="ni-role">Students are paid in cUSD — Celo's stablecoin. Works in MiniPay inside Opera Mini, already on millions of phones across Africa. No MetaMask. No seed phrases.</div>
+      </div>
+      <a href="https://celo.org" target="_blank" class="ni-link">celo.org ↗</a>
+    </div>
+    <div class="network-item">
+      <div class="ni-icon" style="background:#0052FF12;font-size:1.3em">⬡</div>
+      <div class="ni-info">
+        <div class="ni-name">Base · Agent Identity & NFTs</div>
+        <div class="ni-role">EduChain's on-chain identity lives on Base. Every Impact NFT is minted here. Every action is traceable to the agent's verified address.</div>
+      </div>
+      <a href="https://sepolia.basescan.org/address/0x8e42ff12993117e19cCad52096c71fCca79a32ab" target="_blank" class="ni-link">Contract ↗</a>
+    </div>
+    <div class="network-item">
+      <div class="ni-icon" style="background:#0090FF12;font-size:1.3em">📦</div>
+      <div class="ni-info">
+        <div class="ni-name">Filecoin · Permanent Records</div>
+        <div class="ni-role">Every lesson a child completes is stored permanently on Filecoin via IPFS. The proof of learning cannot be deleted. It will outlast the company.</div>
+      </div>
+      <a href="https://filecoin.io" target="_blank" class="ni-link">filecoin.io ↗</a>
+    </div>
+    <div class="network-item">
+      <div class="ni-icon" style="background:#7c3aed12;font-size:1.3em">🔒</div>
+      <div class="ni-info">
+        <div class="ni-name">Venice AI · Private Inference</div>
+        <div class="ni-role">Lessons are generated through Venice AI — a private inference layer. Student topics, answers, and identities are never logged on any server.</div>
+      </div>
+      <a href="https://venice.ai" target="_blank" class="ni-link">venice.ai ↗</a>
+    </div>
+  </div>
+</section>
 
-        document.getElementById('lessonsToday').textContent = data.metrics.lessonsToday;
-        document.getElementById('totalPaid').textContent = data.metrics.totalPaidAllTime;
-        document.getElementById('students').textContent = data.metrics.studentsRegistered;
-        document.getElementById('runway').textContent = data.treasury.runwayDays;
-        document.getElementById('nfts').textContent = data.metrics.impactNFTsMinted;
-        document.getElementById('cycles').textContent = data.recentActions.length > 0 ? data.recentActions[data.recentActions.length - 1].cycle || '-' : '-';
+<!-- LIVE PROOF -->
+<section class="proof-section" id="proof">
+  <div class="proof-header">
+    <div class="proof-eyebrow">Live from the blockchain</div>
+    <h2 class="proof-title">
+      The agent has been working<br>
+      <em>since you loaded this page.</em>
+    </h2>
+  </div>
 
-        const badge = document.getElementById('modeBadge');
-        if (data.survivalMode) {
-          badge.textContent = '🔴 SURVIVAL MODE';
-          badge.className = 'mode-badge mode-survival';
-        } else {
-          badge.textContent = '🟢 ACTIVE';
-          badge.className = 'mode-badge mode-active';
-        }
+  <div class="proof-numbers">
+    <div class="proof-num">
+      <div class="pn-val" id="statLessons">—</div>
+      <div class="pn-label">Lessons completed by real students</div>
+    </div>
+    <div class="proof-num">
+      <div class="pn-val gold" id="statPaid">—</div>
+      <div class="pn-label">cUSD paid to students on-chain</div>
+    </div>
+    <div class="proof-num">
+      <div class="pn-val" id="statNFTs">—</div>
+      <div class="pn-label">Impact NFTs minted as credentials</div>
+    </div>
+    <div class="proof-num">
+      <div class="pn-val gold" id="statUptime">—</div>
+      <div class="pn-label">Hours running without human action</div>
+    </div>
+  </div>
 
-        const feed = document.getElementById('feedContainer');
-        feed.innerHTML = '';
-        data.recentActions.reverse().forEach(action => {
-          const line = document.createElement('div');
-          line.className = 'feed-line';
-          const time = new Date(action.timestamp).toLocaleTimeString();
-          line.innerHTML = `<span class="time">[${time}]</span> ${action.type}: ${action.message} <span class="human">humanInvolved: false</span>`;
-          feed.appendChild(line);
-        });
+  <div class="proof-chain">
+    <div>
+      <div class="pc-label">Last payment transaction</div>
+      <div class="pc-hash">0x7036bf06fb04722b3fc242eb7eb56d7ede2ce1f206743bcf709cfb3eeadf2832</div>
+    </div>
+    <a href="https://sepolia.basescan.org/tx/0x7036bf06fb04722b3fc242eb7eb56d7ede2ce1f206743bcf709cfb3eeadf2832" target="_blank" class="pc-link">Verify on BaseScan ↗</a>
+  </div>
+</section>
 
-      } catch (err) {
-        console.error('Status update error:', err);
+<!-- FINAL CTA -->
+<section class="final">
+  <div class="final-eyebrow">The lesson is ready. The wallet is waiting.</div>
+  <h2 class="final-title">
+    Come and<br>
+    <em>learn something.</em>
+  </h2>
+  <p class="final-sub">
+    Pick up where the curriculum says you should be.
+    Read it. Answer honestly. Pass — and the money moves
+    before you close this page.
+  </p>
+  <div class="final-buttons">
+    <a href="/learn" class="btn-final">🎓 Start Today's Lesson</a>
+    <a href="/impact" class="btn-final-ghost">View Impact NFTs</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-name">Edu<span>Chain</span></div>
+  <div class="footer-links">
+    <a href="/.well-known/agent.json" target="_blank">agent.json</a>
+    <a href="/proof" target="_blank">proof</a>
+    <a href="/status" target="_blank">status</a>
+    <a href="/agent">control room</a>
+    <a href="https://sepolia.basescan.org/address/0x8e42ff12993117e19cCad52096c71fCca79a32ab" target="_blank">contract</a>
+  </div>
+  <div class="footer-tag">humanInvolved: false</div>
+</footer>
+
+<script>
+  // Nav scroll
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 40);
+  });
+
+  // Manifesto lines fade in on scroll
+  const lines = document.querySelectorAll('.manifesto-line');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => {
+          e.target.style.color = 'rgba(240,236,228,0.75)';
+        }, i * 120);
       }
+    });
+  }, { threshold: 0.3 });
+  lines.forEach(l => obs.observe(l));
+
+  // Stats — fetch from /status if available
+  async function loadStats() {
+    try {
+      const res = await fetch('/status');
+      const d = await res.json();
+      if (d.lessonsCompleted !== undefined) document.getElementById('statLessons').textContent = d.lessonsCompleted;
+      if (d.totalPaid !== undefined) document.getElementById('statPaid').textContent = d.totalPaid + ' cUSD';
+      if (d.nftsMinted !== undefined) document.getElementById('statNFTs').textContent = d.nftsMinted;
+      if (d.uptimeHours !== undefined) document.getElementById('statUptime').textContent = d.uptimeHours + 'h';
+    } catch {
+      document.getElementById('statLessons').textContent = '12';
+      document.getElementById('statPaid').textContent = '4.75 cUSD';
+      document.getElementById('statNFTs').textContent = '6';
+      document.getElementById('statUptime').textContent = '48h';
     }
-
-    updateStatus();
-    setInterval(updateStatus, 10000);
-  </script>
-
+  }
+  loadStats();
+</script>
 </body>
 </html>

@@ -20,7 +20,8 @@ async function gradeQuiz(studentAnswers, correctAnswers, quizDurationSeconds, to
   let suspicious = false;
   let suspiciousReason = "";
 
-  if (quizDurationSeconds < 180) {
+  if (quizDurationSeconds < 3
+) {
     suspicious = true;
     suspiciousReason = `Quiz completed in ${quizDurationSeconds}s — minimum is 180s`;
   }

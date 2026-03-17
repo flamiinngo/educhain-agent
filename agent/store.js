@@ -3,11 +3,10 @@ dotenv.config();
 
 import memory from "./memory.js";
 
-const WEB3_STORAGE_TOKEN = process.env.WEB3_STORAGE_TOKEN;
+const PINATA_JWT = process.env.PINATA_JWT;
 
-// Store a lesson record on Filecoin via web3.storage
 async function storeOnFilecoin(lessonData) {
-  console.log(`[STORE] Storing lesson record on Filecoin...`);
+  console.log(`[STORE] Storing lesson record on Filecoin via Pinata...`);
 
   const record = {
     agent: "EduChain",
@@ -23,26 +22,28 @@ async function storeOnFilecoin(lessonData) {
     humanInvolved: false
   };
 
-  // If we have a web3.storage token, store for real
-  if (WEB3_STORAGE_TOKEN && WEB3_STORAGE_TOKEN.length > 10) {
+  if (PINATA_JWT && PINATA_JWT.length > 10) {
     try {
-      const blob = new Blob([JSON.stringify(record)], { type: "application/json" });
-
-      const response = await fetch("https://api.web3.storage/upload", {
+      const response = await fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${WEB3_STORAGE_TOKEN}`,
-          "X-Name": `educhain-lesson-${Date.now()}.json`
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${PINATA_JWT}`
         },
-        body: blob
+        body: JSON.stringify({
+          pinataContent: record,
+          pinataMetadata: {
+            name: `educhain-lesson-${Date.now()}.json`
+          }
+        })
       });
 
       if (!response.ok) {
-        throw new Error(`web3.storage error: ${response.status}`);
+        throw new Error(`Pinata error: ${response.status}`);
       }
 
       const result = await response.json();
-      const cid = result.cid;
+      const cid = result.IpfsHash;
 
       memory.logAction({
         type: "STORE",
@@ -54,19 +55,17 @@ async function storeOnFilecoin(lessonData) {
       return {
         success: true,
         filecoinCID: cid,
-        ipfsGateway: `https://w3s.link/ipfs/${cid}`,
-        storedBy: "web3.storage",
+        ipfsGateway: `https://gateway.pinata.cloud/ipfs/${cid}`,
+        storedBy: "pinata",
         humanInvolved: false
       };
     } catch (err) {
-      console.error(`[STORE] web3.storage error:`, err.message);
-      // Fall through to mock mode
+      console.error(`[STORE] Pinata error:`, err.message);
     }
   }
 
-  // Mock mode — generates a realistic CID for demo
-  const mockCID = `bafyrei${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
-
+  // Mock fallback
+  const mockCID = `bafyreimm${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
   memory.logAction({
     type: "STORE",
     message: `Lesson stored (mock): ${mockCID}`,
@@ -78,8 +77,8 @@ async function storeOnFilecoin(lessonData) {
   return {
     success: true,
     filecoinCID: mockCID,
-    ipfsGateway: `https://w3s.link/ipfs/${mockCID}`,
-    storedBy: "web3.storage",
+    ipfsGateway: `https://gateway.pinata.cloud/ipfs/${mockCID}`,
+    storedBy: "pinata",
     mode: "mock",
     humanInvolved: false
   };
