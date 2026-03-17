@@ -4,12 +4,18 @@ dotenv.config();
 import { ethers } from "ethers";
 import memory from "./memory.js";
 
+// ─── BASE SEPOLIA — Identity, NFTs, Proofs ───
 const BASE_RPC = process.env.BASE_RPC_TESTNET;
-const PRIVATE_KEY = process.env.AGENT_PRIVATE_KEY;
-const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
-const MOCK_CUSD_ADDRESS = process.env.MOCK_CUSD_ADDRESS;
+const BASE_CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
+const BASE_MOCK_CUSD_ADDRESS = process.env.MOCK_CUSD_ADDRESS;
 
-// EduChain contract ABI (only functions we need)
+// ─── CELO SEPOLIA — Student Payments in cUSD ───
+const CELO_RPC = process.env.CELO_RPC || process.env.CELO_RPC_TESTNET;
+const CELO_CONTRACT_ADDRESS = process.env.CELO_CONTRACT_ADDRESS;
+const CELO_MOCK_CUSD_ADDRESS = process.env.CELO_MOCK_CUSD_ADDRESS;
+
+const PRIVATE_KEY = process.env.AGENT_PRIVATE_KEY;
+
 const EDUCHAIN_ABI = [
   "function register(bytes32 phoneHash) external",
   "function verifyStudent(address student) external",
@@ -31,27 +37,41 @@ const CUSD_ABI = [
   "function mint(address to, uint256 amount) external"
 ];
 
-// Setup provider and signer
+// ─── BASE SEPOLIA PROVIDERS ───
 function getProvider() {
   return new ethers.JsonRpcProvider(BASE_RPC);
 }
 
 function getSigner() {
-  const provider = getProvider();
-  return new ethers.Wallet(PRIVATE_KEY, provider);
+  return new ethers.Wallet(PRIVATE_KEY, getProvider());
 }
 
 function getEduChainContract() {
-  const signer = getSigner();
-  return new ethers.Contract(CONTRACT_ADDRESS, EDUCHAIN_ABI, signer);
+  return new ethers.Contract(BASE_CONTRACT_ADDRESS, EDUCHAIN_ABI, getSigner());
 }
 
 function getCUSDContract() {
-  const signer = getSigner();
-  return new ethers.Contract(MOCK_CUSD_ADDRESS, CUSD_ABI, signer);
+  return new ethers.Contract(BASE_MOCK_CUSD_ADDRESS, CUSD_ABI, getSigner());
 }
 
-// Register a student on-chain
+// ─── CELO SEPOLIA PROVIDERS ───
+function getCeloProvider() {
+  return new ethers.JsonRpcProvider(CELO_RPC);
+}
+
+function getCeloSigner() {
+  return new ethers.Wallet(PRIVATE_KEY, getCeloProvider());
+}
+
+function getCeloEduChainContract() {
+  return new ethers.Contract(CELO_CONTRACT_ADDRESS, EDUCHAIN_ABI, getCeloSigner());
+}
+
+function getCeloCUSDContract() {
+  return new ethers.Contract(CELO_MOCK_CUSD_ADDRESS, CUSD_ABI, getCeloSigner());
+}
+
+// ─── REGISTER STUDENT (Base Sepolia) ───
 async function registerStudent(walletAddress, phoneOrEmail) {
   console.log(`[PAY] Registering student: ${walletAddress}`);
 
@@ -69,8 +89,8 @@ async function registerStudent(walletAddress, phoneOrEmail) {
   });
 
   memory.metrics.studentsRegistered++;
-
   console.log(`[PAY] Student registered ✓ TX: ${receipt.hash}`);
+
   return {
     success: true,
     txHash: receipt.hash,
@@ -79,12 +99,11 @@ async function registerStudent(walletAddress, phoneOrEmail) {
   };
 }
 
-// Verify a student (after Self Protocol check)
+// ─── VERIFY STUDENT (Base Sepolia) ───
 async function verifyStudent(walletAddress) {
   console.log(`[PAY] Verifying student: ${walletAddress}`);
 
   const contract = getEduChainContract();
-
   const tx = await contract.verifyStudent(walletAddress);
   const receipt = await tx.wait();
 
@@ -96,6 +115,7 @@ async function verifyStudent(walletAddress) {
   });
 
   console.log(`[PAY] Student verified ✓ TX: ${receipt.hash}`);
+
   return {
     success: true,
     txHash: receipt.hash,
@@ -104,13 +124,12 @@ async function verifyStudent(walletAddress) {
   };
 }
 
-// Pay a student for completing a lesson
+// ─── PAY STUDENT (Celo Sepolia — real cUSD) ───
 async function payStudent(walletAddress, score, topic, filecoinCID, quizStartTimestamp) {
   console.log(`[PAY] Paying student: ${walletAddress} | Score: ${score}/5`);
+  console.log(`[PAY] Network: Celo Sepolia | Contract: ${CELO_CONTRACT_ADDRESS}`);
 
-  const contract = getEduChainContract();
-
-  // Convert quiz start time to unix timestamp
+  const contract = getCeloEduChainContract();
   const quizStartTime = Math.floor(new Date(quizStartTimestamp).getTime() / 1000);
 
   const tx = await contract.rewardStudent(
@@ -127,34 +146,35 @@ async function payStudent(walletAddress, score, topic, filecoinCID, quizStartTim
 
   memory.logAction({
     type: "PAYMENT",
-    message: `Paid ${reward} cUSD to ${walletAddress} for ${topic} (${score}/5)`,
+    message: `Paid ${reward} cUSD to ${walletAddress} for ${topic} (${score}/5) on Celo`,
     txHash: receipt.hash,
     wallet: walletAddress,
     amount: reward,
     score: score,
-    topic: topic
+    topic: topic,
+    network: "celo-sepolia"
   });
 
   memory.metrics.paymentsReleased++;
   memory.metrics.totalPaidCUSD += reward;
 
-  console.log(`[PAY] Payment sent ✓ ${reward} cUSD | TX: ${receipt.hash}`);
+  console.log(`[PAY] Payment sent ✓ ${reward} cUSD on Celo | TX: ${receipt.hash}`);
+
   return {
     success: true,
     amount: `${reward} cUSD`,
     txHash: receipt.hash,
-    basescan: `https://sepolia.basescan.org/tx/${receipt.hash}`,
-    network: "base-sepolia",
+    celoscan: `https://celo-sepolia.celoscan.io/tx/${receipt.hash}`,
+    network: "celo-sepolia",
     humanInvolved: false
   };
 }
 
-// Blacklist a student
+// ─── BLACKLIST STUDENT (Base Sepolia) ───
 async function blacklistStudent(walletAddress, reason) {
   console.log(`[PAY] Blacklisting student: ${walletAddress}`);
 
   const contract = getEduChainContract();
-
   const tx = await contract.blacklistStudent(walletAddress, reason);
   const receipt = await tx.wait();
 
@@ -166,8 +186,8 @@ async function blacklistStudent(walletAddress, reason) {
   });
 
   memory.metrics.studentsBlacklisted++;
-
   console.log(`[PAY] Student blacklisted ✓ TX: ${receipt.hash}`);
+
   return {
     success: true,
     txHash: receipt.hash,
@@ -176,30 +196,55 @@ async function blacklistStudent(walletAddress, reason) {
   };
 }
 
-// Get contract stats
+// ─── GET CONTRACT STATS ───
+// Try Celo first, fall back to Base
 async function getContractStats() {
-  const contract = getEduChainContract();
-  const stats = await contract.getStats();
+  try {
+    const contract = getCeloEduChainContract();
+    const stats = await contract.getStats();
 
-  return {
-    totalStudents: Number(stats[0]),
-    totalLessons: Number(stats[1]),
-    totalPaid: ethers.formatEther(stats[2]),
-    treasuryBalance: ethers.formatEther(stats[3]),
-    runwayDays: Number(stats[4]),
-    survivalMode: stats[5],
-    survivalActivations: Number(stats[6])
-  };
+    return {
+      totalStudents: Number(stats[0]),
+      totalLessons: Number(stats[1]),
+      totalPaid: ethers.formatEther(stats[2]),
+      treasuryBalance: ethers.formatEther(stats[3]),
+      runwayDays: Number(stats[4]),
+      survivalMode: stats[5],
+      survivalActivations: Number(stats[6]),
+      network: "celo-sepolia"
+    };
+  } catch (err) {
+    console.log(`[PAY] Celo stats failed, trying Base: ${err.message}`);
+    const contract = getEduChainContract();
+    const stats = await contract.getStats();
+
+    return {
+      totalStudents: Number(stats[0]),
+      totalLessons: Number(stats[1]),
+      totalPaid: ethers.formatEther(stats[2]),
+      treasuryBalance: ethers.formatEther(stats[3]),
+      runwayDays: Number(stats[4]),
+      survivalMode: stats[5],
+      survivalActivations: Number(stats[6]),
+      network: "base-sepolia"
+    };
+  }
 }
 
-// Get treasury balance
+// ─── GET TREASURY BALANCE ───
 async function getTreasuryBalance() {
-  const contract = getEduChainContract();
-  const balance = await contract.getTreasuryBalance();
-  return ethers.formatEther(balance);
+  try {
+    const contract = getCeloEduChainContract();
+    const balance = await contract.getTreasuryBalance();
+    return ethers.formatEther(balance);
+  } catch {
+    const contract = getEduChainContract();
+    const balance = await contract.getTreasuryBalance();
+    return ethers.formatEther(balance);
+  }
 }
 
-// Get student info
+// ─── GET STUDENT INFO ───
 async function getStudentInfo(walletAddress) {
   const contract = getEduChainContract();
   const student = await contract.getStudent(walletAddress);
@@ -227,5 +272,9 @@ export {
   getProvider,
   getSigner,
   getEduChainContract,
-  getCUSDContract
+  getCUSDContract,
+  getCeloProvider,
+  getCeloSigner,
+  getCeloEduChainContract,
+  getCeloCUSDContract
 };

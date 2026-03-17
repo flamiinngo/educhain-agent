@@ -452,7 +452,8 @@ app.post("/submit-quiz", async (req, res) => {
         );
         response.paymentTx = paymentResult.txHash;
         response.txHash = paymentResult.txHash;
-        response.basescan = `https://sepolia.basescan.org/tx/${paymentResult.txHash}`;
+        response.celoscan = `https://celo-sepolia.celoscan.io/tx/${paymentResult.txHash}`;
+        response.basescan = response.celoscan;
         console.log(`[SUBMIT] ✅ Payment sent: ${paymentResult.txHash}`);
       } catch (err) {
         console.log(`[SUBMIT] Payment note: ${err.message}`);
@@ -481,6 +482,8 @@ app.post("/submit-quiz", async (req, res) => {
         );
         response.nftTokenId = nftResult.tokenId;
         response.nftMinted = true;
+        response.nftTx = nftResult.mintTx;
+        response.nftScan = `https://sepolia.basescan.org/tx/${nftResult.mintTx}`;
       } catch (err) {
         console.log(`[SUBMIT] NFT note: ${err.message}`);
       }
