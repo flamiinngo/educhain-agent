@@ -1,9 +1,9 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-const API_KEY = process.env.GROQ_API_KEY;
-const API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const MODEL = "llama-3.3-70b-versatile";
+const API_KEY = process.env.VENICE_API_KEY;
+const API_URL = "https://api.venice.ai/api/v1/chat/completions";
+const MODEL = "llama-3.3-70b";
 
 async function callAI(messages) {
   const response = await fetch(API_URL, {

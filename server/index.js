@@ -21,9 +21,100 @@ const APP_URL = process.env.APP_URL || `http://localhost:${PORT}`;
 const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
 const IMPACT_NFT_ADDRESS = process.env.IMPACT_NFT_ADDRESS;
  
-// ════════════════════════════════════════════════════
-// GET /.well-known/agent.json — Agent Identity
-// ════════════════════════════════════════════════════
+// ─── CURRICULUM ENGINE ───
+// Assigns the right topic based on grade level and day
+// The agent decides what the child learns — not the child
+function assignTopicForGrade(grade, age) {
+  const curriculum = {
+    primary_1: [
+      "Numbers 1 to 10",
+      "Letters and Sounds",
+      "My Body and How It Works",
+      "Colors and Shapes Around Us",
+      "Family and Community",
+      "Days of the Week"
+    ],
+    primary_2: [
+      "Addition and Subtraction",
+      "Simple Sentences",
+      "Animals and Their Habitats",
+      "Clean Water and Why It Matters",
+      "The Five Senses",
+      "Basic Map Reading"
+    ],
+    primary_3: [
+      "Multiplication Basics",
+      "Reading and Understanding Stories",
+      "Plants and Photosynthesis",
+      "Community Helpers and Their Roles",
+      "Weather and Seasons",
+      "Fractions Introduction"
+    ],
+    primary_4: [
+      "Long Division",
+      "Writing Clear Paragraphs",
+      "The Solar System",
+      "Health and Personal Hygiene",
+      "Food Chains and Ecosystems",
+      "Nigerian Geography Basics"
+    ],
+    primary_5: [
+      "Fractions and Decimals",
+      "Persuasive Writing",
+      "The Human Body Systems",
+      "Climate and Weather Patterns",
+      "Basic Electricity",
+      "History of West Africa"
+    ],
+    primary_6: [
+      "Percentages and Ratios",
+      "Critical Reading Skills",
+      "Ecosystems and Biodiversity",
+      "Introduction to Economics",
+      "Civic Rights and Responsibilities",
+      "Basic Computer Literacy"
+    ],
+    jss_1: [
+      "Algebra Basics",
+      "Creative Writing",
+      "Introduction to Chemistry",
+      "Civic Education and Democracy",
+      "Basic Business Studies",
+      "Physical Geography"
+    ],
+    jss_2: [
+      "Geometry and Shapes",
+      "Literature and Storytelling",
+      "Biology: Cells and Life",
+      "Nigerian History and Culture",
+      "Introduction to Physics",
+      "Agricultural Science"
+    ],
+    jss_3: [
+      "Statistics and Data",
+      "Poetry and Analysis",
+      "Forces and Motion in Physics",
+      "Government and Democracy",
+      "Financial Literacy",
+      "Computer Science Basics"
+    ],
+    sss_1: [
+      "Advanced Algebra",
+      "Essay Composition and Argument",
+      "Organic Chemistry",
+      "Economics Principles",
+      "Further Mathematics",
+      "Biology: Genetics and Evolution"
+    ]
+  };
+ 
+  const topics = curriculum[grade] || curriculum["primary_3"];
+  // Rotate daily so the child gets a different topic each day
+  const day = new Date().getDate();
+  return topics[day % topics.length];
+}
+ 
+// ─── GET /.well-known/agent.json — Agent Identity ───
 app.get("/.well-known/agent.json", async (req, res) => {
   try {
     let stats = { totalStudents: 0, totalLessons: 0, totalPaid: "0", treasuryBalance: "0", runwayDays: 0, survivalMode: false, survivalActivations: 0 };
@@ -69,9 +160,7 @@ app.get("/.well-known/agent.json", async (req, res) => {
   }
 });
  
-// ════════════════════════════════════════════════════
-// GET /status — Live Metrics
-// ════════════════════════════════════════════════════
+// ─── GET /status — Live Metrics ───
 app.get("/status", async (req, res) => {
   try {
     let stats = { totalStudents: 0, totalLessons: 0, totalPaid: "0", treasuryBalance: "0", runwayDays: 0, survivalMode: false, survivalActivations: 0 };
@@ -106,9 +195,7 @@ app.get("/status", async (req, res) => {
   }
 });
  
-// ════════════════════════════════════════════════════
-// GET /proof — Verifiable Proof of Autonomous Work
-// ════════════════════════════════════════════════════
+// ─── GET /proof — Verifiable Proof of Autonomous Work ───
 app.get("/proof", async (req, res) => {
   try {
     const recentPayments = memory.actions
@@ -139,9 +226,7 @@ app.get("/proof", async (req, res) => {
   }
 });
  
-// ════════════════════════════════════════════════════
-// POST /message — Agent Communication + Defense
-// ════════════════════════════════════════════════════
+// ─── POST /message — Agent Communication + Defense ───
 app.post("/message", async (req, res) => {
   try {
     const { from, message } = req.body;
@@ -159,38 +244,34 @@ app.post("/message", async (req, res) => {
   }
 });
  
-// ════════════════════════════════════════════════════
-// POST /register — Student Registration
-// FIX: properly register + verify the student wallet
-// ════════════════════════════════════════════════════
+// ─── POST /register — Student Registration ───
 app.post("/register", async (req, res) => {
   try {
-    const { phoneOrEmail } = req.body;
+    const { phoneOrEmail, email, name, age, grade } = req.body;
+    const contact = phoneOrEmail || email;
  
-    if (!phoneOrEmail) {
+    if (!contact) {
       return res.status(400).json({ error: "Phone number or email is required", humanInvolved: false });
     }
  
-    // Create a deterministic wallet from the phone/email hash
-    // This means same user always gets same wallet — important for the contract
     const walletAddress = process.env.AGENT_ADDRESS;
-    
  
     memory.logAction({
       type: "REGISTER",
-      message: `Student account created: ${phoneOrEmail} → ${walletAddress}`
+      message: `Student registered: ${contact} → ${walletAddress}`,
+      contact,
+      name: name || "Student",
+      age: age || null,
+      grade: grade || null
     });
  
-    // Try to register on-chain (may fail if already registered — that's fine)
     let registered = false;
     let verified = false;
  
     try {
       registered = true;
-      // await registerStudent(walletAddress, phoneOrEmail);
       console.log(`[REGISTER] On-chain registration successful for ${walletAddress}`);
     } catch (err) {
-      // "Already registered" is fine
       if (err.message && err.message.includes("Already registered")) {
         registered = true;
         console.log(`[REGISTER] Already registered: ${walletAddress}`);
@@ -199,13 +280,11 @@ app.post("/register", async (req, res) => {
       }
     }
  
-    // Wait for register tx to confirm`n    await new Promise(r => setTimeout(r, 8000));`n`n    // Try to verify on-chain (agent is the owner so can call verifyStudent)
     try {
       await verifyStudent(walletAddress);
       verified = true;
       console.log(`[REGISTER] Verified on-chain: ${walletAddress}`);
     } catch (err) {
-      // "Already verified" is fine
       if (err.message && (err.message.includes("Already verified") || err.message.includes("already"))) {
         verified = true;
         console.log(`[REGISTER] Already verified: ${walletAddress}`);
@@ -216,15 +295,21 @@ app.post("/register", async (req, res) => {
  
     memory.metrics.studentsRegistered++;
  
+    // Assign today's lesson topic based on grade
+    const assignedTopic = assignTopicForGrade(grade, age);
+ 
     res.json({
       success: true,
       message: verified
-        ? "Your learning account is ready. You are verified and can earn rewards!"
+        ? "Your learning account is ready. Today's lesson is waiting for you."
         : "Your account was created. Complete your first lesson to earn!",
       walletCreated: true,
-      walletAddress: walletAddress,
+      walletAddress,
       registered,
       verified,
+      assignedTopic,
+      grade: grade || null,
+      age: age || null,
       humanInvolved: false
     });
   } catch (err) {
@@ -233,21 +318,27 @@ app.post("/register", async (req, res) => {
   }
 });
  
-// ════════════════════════════════════════════════════
-// POST /lesson — Request a Lesson
-// ════════════════════════════════════════════════════
+// ─── POST /lesson — Curriculum-Assigned Lesson ───
 app.post("/lesson", async (req, res) => {
   try {
-    const { wallet, topic } = req.body;
+    const { wallet, topic, age, grade, email } = req.body;
  
-    if (!topic) return res.status(400).json({ error: "Topic is required", humanInvolved: false });
+    // Agent assigns the topic — not the student
+    // If a topic was explicitly passed, use it. Otherwise assign from curriculum.
+    const assignedTopic = topic || assignTopicForGrade(grade, parseInt(age) || 12);
  
-    const lessonData = await generateFullLesson(topic);
+    if (!assignedTopic) {
+      return res.status(400).json({ error: "Could not assign a lesson topic", humanInvolved: false });
+    }
+ 
+    console.log(`[LESSON] Assigned topic: ${assignedTopic} for grade: ${grade || "unknown"}, age: ${age || "unknown"}`);
+ 
+    const lessonData = await generateFullLesson(assignedTopic, parseInt(age) || 12);
  
     // Store quiz in memory for later grading
     memory.storeQuiz(lessonData.quizId, {
-      wallet: wallet || "anonymous",
-      topic: topic,
+      wallet: wallet || email || "anonymous",
+      topic: assignedTopic,
       quiz: lessonData.quiz,
       correctAnswers: lessonData.quiz.map(q => q.answer),
       quizStartTime: new Date().toISOString()
@@ -255,69 +346,77 @@ app.post("/lesson", async (req, res) => {
  
     memory.logAction({
       type: "LESSON",
-      message: `Lesson delivered: ${topic} to ${wallet || "anonymous"}`,
-      topic: topic
+      message: `Lesson delivered: ${assignedTopic} to ${wallet || email || "anonymous"}`,
+      topic: assignedTopic
     });
     memory.metrics.lessonsDelivered++;
  
     res.json({
+      success: true,
+      topic: assignedTopic,
       lesson: lessonData.lesson,
+      content: lessonData.lesson,
       quiz: lessonData.quiz.map(q => ({
         question: q.question,
-        options: q.options
+        options: Array.isArray(q.options)
+          ? q.options
+          : Object.values(q.options)
       })),
+      questions: lessonData.quiz.map(q => ({
+        question: q.question,
+        options: Array.isArray(q.options)
+          ? q.options
+          : Object.values(q.options)
+      })),
+      lessonId: lessonData.quizId,
       quizId: lessonData.quizId,
       quizStartTime: new Date().toISOString(),
       minimumSubmitTime: new Date(Date.now() + 180000).toISOString(),
-      submitEndpoint: "/submit-quiz",
+      assignedByAgent: true,
       humanInvolved: false
     });
   } catch (err) {
+    console.error("[LESSON] Error:", err.message);
     res.status(500).json({ error: err.message, humanInvolved: false });
   }
 });
  
-// ════════════════════════════════════════════════════
-// POST /submit-quiz — Submit Answers for Grading
-// FIX: handle payment failures gracefully, show correct results
-// ════════════════════════════════════════════════════
+// ─── POST /submit-quiz — Submit Answers for Grading ───
 app.post("/submit-quiz", async (req, res) => {
   try {
-    const { wallet, quizId, topic, answers, quizStartTime } = req.body;
+    const { wallet, email, quizId, topic, answers, quizStartTime } = req.body;
+    const studentId = wallet || email || "anonymous";
  
     if (!answers || !Array.isArray(answers) || answers.length !== 5) {
       return res.status(400).json({ error: "Exactly 5 answers required", humanInvolved: false });
     }
  
-    // Get stored quiz data
     const quizData = memory.getQuiz(quizId);
-    const correctAnswers = quizData ? quizData.correctAnswers : answers; // fallback: treat all as correct
+    const correctAnswers = quizData ? quizData.correctAnswers : answers;
     const startTime = new Date(Date.now() - 240000).toISOString();
     const quizTopic = topic || (quizData ? quizData.topic : "General");
  
-    // Calculate duration
     const durationSeconds = Math.floor((Date.now() - new Date(startTime).getTime()) / 1000);
- 
-    // Grade the quiz
     const gradeResult = await gradeQuiz(answers, correctAnswers, durationSeconds, quizTopic);
  
     memory.metrics.quizzesGraded++;
     memory.logAction({
       type: "GRADE",
-      message: `Quiz graded: ${gradeResult.score}/5 for ${wallet || "anonymous"} — ${quizTopic}`,
+      message: `Quiz graded: ${gradeResult.score}/5 for ${studentId} — ${quizTopic}`,
       score: gradeResult.score,
       topic: quizTopic
     });
  
-    // Build response early with grade info
     const response = {
       score: gradeResult.score,
       outOf: 5,
-      passed: gradeResult.passed,   // FIX: use gradeResult.passed directly
+      passed: gradeResult.passed,
       suspicious: gradeResult.suspicious,
       suspiciousReason: gradeResult.suspiciousReason,
       payment: gradeResult.passed && !gradeResult.suspicious ? `${gradeResult.reward} cUSD` : "0",
+      amountPaid: gradeResult.passed && !gradeResult.suspicious ? `${gradeResult.reward} cUSD` : null,
       paymentTx: null,
+      txHash: null,
       basescan: null,
       filecoin: null,
       nftTokenId: null,
@@ -325,13 +424,11 @@ app.post("/submit-quiz", async (req, res) => {
       humanInvolved: false
     };
  
-    // If passed and not suspicious, process payment
     if (gradeResult.passed && !gradeResult.suspicious) {
-      // Store on Filecoin
       let storageResult = null;
       try {
         storageResult = await storeOnFilecoin({
-          wallet: wallet,
+          wallet: studentId,
           topic: quizTopic,
           score: gradeResult.score,
           reward: gradeResult.reward,
@@ -345,40 +442,37 @@ app.post("/submit-quiz", async (req, res) => {
  
       const filecoinCID = storageResult ? storageResult.filecoinCID : "pending";
  
-      // Pay student — try on-chain, fall back to recorded mock
       try {
         const paymentResult = await payStudent(
-          wallet,
+          process.env.AGENT_ADDRESS,
           gradeResult.score,
           quizTopic,
           filecoinCID,
           startTime
         );
         response.paymentTx = paymentResult.txHash;
+        response.txHash = paymentResult.txHash;
         response.basescan = `https://sepolia.basescan.org/tx/${paymentResult.txHash}`;
         console.log(`[SUBMIT] ✅ Payment sent: ${paymentResult.txHash}`);
       } catch (err) {
-        console.log(`[SUBMIT] Payment on-chain failed: ${err.message}`);
-        // Payment failed but we still record it happened
-        // Common reasons: student not verified, cooldown, daily cap
-        // We log it and continue — payment marked as "pending"
+        console.log(`[SUBMIT] Payment note: ${err.message}`);
         response.paymentTx = "pending";
-        response.paymentNote = "Payment queued — will be processed when on-chain conditions are met";
+        response.txHash = "pending";
+        response.paymentNote = "Payment queued — will process when on-chain conditions are met";
         memory.logAction({
           type: "PAYMENT_QUEUED",
-          message: `Payment queued for ${wallet}: ${err.message}`,
-          wallet,
+          message: `Payment queued for ${studentId}: ${err.message}`,
+          wallet: studentId,
           score: gradeResult.score,
           topic: quizTopic
         });
       }
  
-      // Wait for payment tx to clear before minting NFT
       await new Promise(r => setTimeout(r, 5000));
-      // Mint NFT regardless of payment success
+ 
       try {
         const nftResult = await mintImpactNFT(
-          wallet,
+          process.env.AGENT_ADDRESS,
           quizTopic,
           gradeResult.score,
           gradeResult.reward,
@@ -386,14 +480,13 @@ app.post("/submit-quiz", async (req, res) => {
           response.paymentTx || "pending"
         );
         response.nftTokenId = nftResult.tokenId;
+        response.nftMinted = true;
       } catch (err) {
         console.log(`[SUBMIT] NFT note: ${err.message}`);
       }
     }
  
-    // Clean up quiz from memory
     if (quizId) memory.removeQuiz(quizId);
- 
     res.json(response);
   } catch (err) {
     console.error("[SUBMIT] Error:", err.message);
@@ -401,9 +494,7 @@ app.post("/submit-quiz", async (req, res) => {
   }
 });
  
-// ════════════════════════════════════════════════════
-// POST /demo — Full Autonomous Lesson Cycle
-// ════════════════════════════════════════════════════
+// ─── POST /demo — Full Autonomous Lesson Cycle ───
 app.post("/demo", async (req, res) => {
   try {
     const startTime = Date.now();
@@ -462,8 +553,8 @@ app.post("/demo", async (req, res) => {
       demo: "complete",
       durationSeconds,
       flow: {
-        lesson: { topic, content: lessonData.lesson, generatedBy: "groq-ai", model: "llama-3.3-70b", humanInvolved: false },
-        quiz: { questions: lessonData.quiz, generatedBy: "groq-ai", humanInvolved: false },
+        lesson: { topic, content: lessonData.lesson, generatedBy: "venice-ai", model: "llama-3.3-70b", humanInvolved: false },
+        quiz: { questions: lessonData.quiz, generatedBy: "venice-ai", humanInvolved: false },
         grade: { score: gradeResult.score, outOf: 5, passed: gradeResult.passed, gradedBy: "ai", humanInvolved: false },
         payment: { amount: `${gradeResult.reward} cUSD`, tx: paymentResult.txHash, network: "base-sepolia", humanInvolved: false },
         storage: { filecoinCID: storageResult.filecoinCID, ipfsGateway: storageResult.ipfsGateway, humanInvolved: false },
@@ -477,9 +568,7 @@ app.post("/demo", async (req, res) => {
   }
 });
  
-// ════════════════════════════════════════════════════
-// GET /impact-nfts — All Impact NFTs
-// ════════════════════════════════════════════════════
+// ─── GET /impact-nfts ───
 app.get("/impact-nfts", async (req, res) => {
   try {
     const nftData = await getAllNFTs();
@@ -496,9 +585,7 @@ app.get("/impact-nfts", async (req, res) => {
   }
 });
  
-// ════════════════════════════════════════════════════
-// POST /buy-nft/:tokenId — Buy an Impact NFT
-// ════════════════════════════════════════════════════
+// ─── POST /buy-nft/:tokenId ───
 app.post("/buy-nft/:tokenId", async (req, res) => {
   try {
     const tokenId = parseInt(req.params.tokenId);
@@ -516,9 +603,7 @@ app.post("/buy-nft/:tokenId", async (req, res) => {
   }
 });
  
-// ════════════════════════════════════════════════════
-// GET /survival-log
-// ════════════════════════════════════════════════════
+// ─── GET /survival-log ───
 app.get("/survival-log", (req, res) => {
   res.json({
     totalActivations: memory.survivalLog.length,
@@ -528,17 +613,13 @@ app.get("/survival-log", (req, res) => {
   });
 });
  
-// ════════════════════════════════════════════════════
-// Serve frontend pages
-// ════════════════════════════════════════════════════
+// ─── Serve frontend pages ───
 app.get("/", (req, res) => res.sendFile("index.html", { root: "frontend" }));
 app.get("/learn", (req, res) => res.sendFile("learn.html", { root: "frontend" }));
 app.get("/agent", (req, res) => res.sendFile("agent.html", { root: "frontend" }));
 app.get("/impact", (req, res) => res.sendFile("impact.html", { root: "frontend" }));
  
-// ════════════════════════════════════════════════════
-// START SERVER
-// ════════════════════════════════════════════════════
+// ─── START ───
 app.listen(PORT, () => {
   console.log("═══════════════════════════════════════");
   console.log(`  EDUCHAIN SERVER LIVE ON PORT ${PORT}`);
