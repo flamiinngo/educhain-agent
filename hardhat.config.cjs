@@ -25,6 +25,11 @@ module.exports = {
       url: "https://alfajores-forno.celo-testnet.org",
       accounts: [AGENT_PRIVATE_KEY],
       chainId: 44787
+    },
+    celoSepolia: {
+      url: "https://celo-sepolia.drpc.org",
+      accounts: [AGENT_PRIVATE_KEY],
+      chainId: 11142220
     }
   }
 };
