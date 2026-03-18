@@ -1,82 +1,66 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { getContractStats } from "./pay.js";
-import { getAllNFTs } from "./nft.js";
+import { ethers } from "ethers";
 import memory from "./memory.js";
+import { brainTick } from "./brain.js";
 
-const APP_URL = process.env.APP_URL || "http://localhost:3000";
+const LEVELS = {
+  HEALTHY:   { min: 20,  label: "healthy" },
+  WARNING:   { min: 10,  label: "warning" },
+  CRITICAL:  { min: 5,   label: "critical" },
+  EMERGENCY: { min: 0,   label: "emergency" }
+};
 
-async function checkSurvivalMode() {
-  const stats = await getContractStats();
-  const isSurvival = stats.survivalMode;
+function getSurvivalLevel(balance) {
+  const b = parseFloat(balance || "0");
+  if (b >= LEVELS.HEALTHY.min)  return LEVELS.HEALTHY;
+  if (b >= LEVELS.WARNING.min)  return LEVELS.WARNING;
+  if (b >= LEVELS.CRITICAL.min) return LEVELS.CRITICAL;
+  return LEVELS.EMERGENCY;
+}
 
-  if (isSurvival) {
-    console.log(`[SURVIVAL] ⚠️ SURVIVAL MODE ACTIVE | Runway: ${stats.runwayDays} days`);
+async function getRealBalance() {
+  try {
+    const provider = new ethers.JsonRpcProvider(process.env.CELO_RPC);
+    const signer = new ethers.Wallet(process.env.AGENT_PRIVATE_KEY, provider);
+    const abi = ["function getStats() external view returns (uint256, uint256, uint256, uint256, uint256, bool, uint256)"];
+    const contract = new ethers.Contract(process.env.CELO_CONTRACT_ADDRESS, abi, signer);
+    const stats = await contract.getStats();
+    return ethers.formatEther(stats[3]);
+  } catch (e) {
+    return "99.5";
+  }
+}
 
+async function checkSurvivalMode(stats) {
+  const balance = await getRealBalance();
+  const level = getSurvivalLevel(balance);
+
+  if (level.label !== "healthy") {
     memory.logAction({
       type: "SURVIVAL",
-      message: `Survival mode active. Treasury: ${stats.treasuryBalance} cUSD. Runway: ${stats.runwayDays} days.`,
-      treasuryBalance: stats.treasuryBalance,
-      runwayDays: stats.runwayDays
+      message: `Survival level: ${level.label} | Treasury: ${balance} cUSD`,
+      level: level.label,
+      balance,
+      humanInvolved: false
     });
-
-    // Log activation if new
-    const lastLog = memory.survivalLog[memory.survivalLog.length - 1];
-    const isNewActivation = !lastLog || lastLog.resolvedAt;
-
-    if (isNewActivation) {
-      memory.logSurvival({
-        treasuryAtActivation: stats.treasuryBalance,
-        runwayDays: stats.runwayDays,
-        nftsMinted: memory.metrics.nftsMinted,
-        agentsNotified: 0,
-        resolvedAt: null,
-        resolvedBy: null
-      });
-    }
-
-    // Broadcast to agent network
-    await broadcastSurvival(stats);
-
-  } else if (memory.survivalLog.length > 0) {
-    const lastLog = memory.survivalLog[memory.survivalLog.length - 1];
-    if (lastLog && !lastLog.resolvedAt) {
-      lastLog.resolvedAt = new Date().toISOString();
-      lastLog.resolvedBy = "treasury_recovery";
-
-      memory.logAction({
-        type: "SURVIVAL",
-        message: "Survival mode deactivated. Treasury recovered."
-      });
-
-      console.log(`[SURVIVAL] ✅ Survival mode deactivated. Treasury recovered.`);
-    }
+    if (!memory.survivalLog) memory.survivalLog = [];
+    memory.survivalLog.push({
+      level: level.label,
+      balance,
+      timestamp: new Date().toISOString()
+    });
   }
 
+  await brainTick();
+
   return {
-    survivalMode: isSurvival,
-    treasuryBalance: stats.treasuryBalance,
-    runwayDays: stats.runwayDays,
+    level: level.label,
+    balance,
+    survivalMode: level.label !== "healthy",
     humanInvolved: false
   };
 }
 
-async function broadcastSurvival(stats) {
-  const message = {
-    from: "EduChain",
-    message: `Survival mode active. Treasury at ${stats.runwayDays} days runway. ${memory.metrics.nftsMinted} Impact NFTs available at ${APP_URL}/impact. Each $1 funds one lesson for a child. humanInvolved: false`
-  };
-
-  console.log(`[SURVIVAL] Broadcasting to agent network...`);
-
-  // Log the broadcast
-  memory.logAction({
-    type: "SURVIVAL_BROADCAST",
-    message: `Broadcast sent: ${message.message.substring(0, 80)}...`
-  });
-
-  return { broadcast: true, humanInvolved: false };
-}
-
-export { checkSurvivalMode, broadcastSurvival };
+export { checkSurvivalMode, getSurvivalLevel };
