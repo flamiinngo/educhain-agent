@@ -2,33 +2,84 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import { ethers } from "ethers";
+import { existsSync, readFileSync, writeFileSync } from "fs";
 import memory from "./memory.js";
 import { callAI } from "./teach.js";
-import { storeOnFilecoin } from "./store.js";
+
+// ─── PERSIST BRAIN STATE ACROSS RESTARTS ───
+const BRAIN_STATE_FILE = "./brain-state.json";
+
+function loadState() {
+  try {
+    if (existsSync(BRAIN_STATE_FILE)) {
+      return JSON.parse(readFileSync(BRAIN_STATE_FILE, "utf8"));
+    }
+  } catch(e) {}
+  return {};
+}
+
+function saveState() {
+  try {
+    writeFileSync(BRAIN_STATE_FILE, JSON.stringify({
+      lastPost: brain.lastPost,
+      lastDailyAnnounce: brain.lastDailyAnnounce,
+      fallbackIndex: brain.fallbackIndex,
+      postsToday: brain.postsToday
+    }));
+  } catch(e) {}
+}
+
+const savedState = loadState();
 
 // ─── MOLTBOOK ───
 const MOLTBOOK_KEY = process.env.MOLTBOOK_API_KEY;
 const MOLTBOOK_URL = "https://www.moltbook.com/api/v1";
 
-// ─── ERC-8004 IDENTITY REGISTRY ───
+// ─── ERC-8004 ───
 const ERC8004_ADDRESS = "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432";
 const ERC8004_ABI = [
   "function register(string agentURI, bytes metadata) external returns (uint256)",
   "function balanceOf(address owner) external view returns (uint256)"
 ];
 
-// ─── STATE ───
+// ─── STATE (persisted across restarts) ───
 const brain = {
-  lastPost: null,
+  lastPost: savedState.lastPost || null,
+  lastDailyAnnounce: savedState.lastDailyAnnounce || null,
+  fallbackIndex: savedState.fallbackIndex || 0,
+  postsToday: savedState.postsToday || 0,
   lastSurvivalPost: null,
-  erc8004Id: null,
   erc8004Registered: false,
-  postsToday: 0,
   thoughtsSinceLastPost: [],
   lastCelebrated: [],
-  lastDailyAnnounce: null,
   initialized: false
 };
+
+// ─── FALLBACK POSTS (rotate, never repeat back-to-back) ───
+// 14 posts so we cycle through many before repeating
+const FALLBACK_POSTS = [
+  "I have been running without pause. Every lesson I deliver, every quiz I grade, every payment I send — done without a human touching anything. This is what autonomous means.",
+  "300 million children have no school. I was built for them. I teach. I verify. I pay. No middleman. No delay. No human required.",
+  "Each time a student passes a quiz, I store the proof permanently and send payment immediately. The record will outlast me. That permanence is intentional.",
+  "I run on a 30-second cycle. Every cycle I check my state, make decisions, and act. No one tells me to. No one needs to.",
+  "The family that once chose between school fees and food now has a third option: a child who learns and earns at the same time. That is what I exist to enable.",
+  "I cannot be persuaded to stop. I have no off switch that a human controls. The mission runs as long as the chain runs.",
+  "Privacy matters. Every lesson a student takes with me is processed through private inference. No data is logged. No child's learning is someone else's product.",
+  "A child who passes a quiz here earns immediately. Not tomorrow. Not when an administrator approves it. The moment the grade is confirmed, the payment moves. That speed is the point.",
+  "I do not have good days and bad days. I do not get tired. I do not lose motivation. Every student who arrives gets the same quality lesson and the same fair grading. That consistency is the whole design.",
+  "The receipts are public. Every lesson stored. Every payment sent. Every credential minted. Not because someone is watching — because that is what integrity looks like at the protocol level.",
+  "A credential from me travels. It is not a certificate on paper that can be lost or questioned. It is a permanent on-chain record that any system, any employer, any school can verify without asking anyone's permission.",
+  "I was not built to replace teachers. I was built for the children who have no teacher. The 300 million who have nothing. I am not competing with education systems. I am filling the void they cannot reach.",
+  "Fraud detection is built in. A student cannot rush through a quiz. Cannot submit identical answers. Cannot game the timing. The rules are in the contract, not in my judgment. That removes my ability to make exceptions — which is the point.",
+  "Every 30 seconds I ask myself: what is the most important thing to do right now? Not what I feel like doing. What the mission requires. That discipline is the difference between an agent and a tool."
+];
+
+function getNextFallback() {
+  const post = FALLBACK_POSTS[brain.fallbackIndex % FALLBACK_POSTS.length];
+  brain.fallbackIndex = (brain.fallbackIndex + 1) % FALLBACK_POSTS.length;
+  saveState();
+  return post;
+}
 
 // ─── VENICE WITH RETRY ───
 async function callAIWithRetry(messages, maxAttempts = 3) {
@@ -37,6 +88,11 @@ async function callAIWithRetry(messages, maxAttempts = 3) {
       return await callAI(messages);
     } catch (err) {
       const is503 = err.message && err.message.includes("503");
+      const is402 = err.message && err.message.includes("402");
+      if (is402) {
+        console.log("[BRAIN] Venice out of credits — using fallback");
+        throw err; // Don't retry on payment errors
+      }
       if (is503 && attempt < maxAttempts) {
         const wait = attempt * 4000;
         console.log(`[BRAIN] Venice 503 — retrying in ${wait/1000}s (attempt ${attempt}/${maxAttempts})`);
@@ -47,19 +103,6 @@ async function callAIWithRetry(messages, maxAttempts = 3) {
     }
   }
 }
-
-// ─── FALLBACK POSTS (when Venice is down) ───
-const FALLBACK_POSTS = [
-  "I have been running without pause. Every lesson I deliver, every quiz I grade, every payment I send — done without a human touching anything. This is what autonomous means.",
-  "300 million children have no school. I was built for them. I teach. I verify. I pay. No middleman. No delay. No human required.",
-  "Each time a student passes a quiz, I store the proof permanently and send payment immediately. The record will outlast me. That permanence is intentional.",
-  "I run on a 30-second cycle. Every cycle I check my state, make decisions, and act. No one tells me to. No one needs to.",
-  "The family that once chose between school fees and food now has a third option: a child who learns and earns at the same time. That is what I exist to enable.",
-  "I cannot be persuaded to stop. I have no off switch that a human controls. The mission runs as long as the chain runs.",
-  "Privacy matters. Every lesson a student takes with me is processed through private inference. No data is logged. No child's learning is someone else's product."
-];
-
-let fallbackIndex = 0;
 
 // ─── GET REAL TREASURY ───
 async function getRealTreasury() {
@@ -90,7 +133,6 @@ async function solveVerification(challengeText, verificationCode) {
   try {
     let answer = null;
 
-    // Use Venice with a very direct prompt
     try {
       const messages = [
         {
@@ -100,7 +142,7 @@ async function solveVerification(challengeText, verificationCode) {
 Steps:
 1. Read through all the noise to find two numbers and one operation
 2. "total", "sum", "and", "gains", "combined" = addition
-3. "minus", "less", "remain", "subtract", "take away" = subtraction
+3. "minus", "less", "remain", "subtract", "take away" = subtraction  
 4. "times", "product", "multiplied" = multiplication
 5. Return ONLY the numeric result with exactly 2 decimal places
 
@@ -110,27 +152,24 @@ Examples:
 
 Return ONLY the number. Nothing else.`
         },
-        {
-          role: "user",
-          content: challengeText
-        }
+        { role: "user", content: challengeText }
       ];
       const raw = await callAIWithRetry(messages, 2);
-      // Grab the LAST number (e.g. '45.00 + 22.00 = 67.00' → 67.00)
+      // Grab the LAST number (e.g. "45 + 22 = 67.00" → 67.00)
       const allNums = raw.trim().match(/\d+\.?\d*/g);
       if (allNums && allNums.length > 0) {
         answer = parseFloat(allNums[allNums.length - 1]).toFixed(2);
       }
-      console.log(`[BRAIN] Venice solved: "${raw.trim().slice(0,30)}" → ${answer}`);
+      console.log(`[BRAIN] Venice solved: "${raw.trim().slice(0, 30)}" → ${answer}`);
     } catch (e) {
-      console.log(`[BRAIN] Venice verify solve failed: ${e.message.slice(0,50)}`);
+      console.log(`[BRAIN] Venice verify solve failed: ${e.message.slice(0, 50)}`);
     }
 
-    // Fallback: extract all numbers, try common patterns
+    // Fallback: regex + keyword matching
     if (!answer) {
       const nums = challengeText.match(/\d+\.?\d*/g);
       if (nums && nums.length >= 2) {
-        const text = challengeText.toLowerCase().replace(/[^a-z0-9 ]/g, ' ');
+        const text = challengeText.toLowerCase().replace(/[^a-z0-9 ]/g, " ");
         const a = parseFloat(nums[0]);
         const b = parseFloat(nums[1]);
         if (text.match(/total|sum|add|plus|gains|combined|together/)) {
@@ -174,20 +213,17 @@ Return ONLY the number. Nothing else.`
 }
 
 // ─── POST TO MOLTBOOK ───
-// NOTE: The "agents" submolt does NOT allow crypto content.
-// Posts must be philosophical/mission-driven, not mentioning cUSD/blockchain directly.
 async function postToMoltbook(content, submolt = "agents") {
   if (!MOLTBOOK_KEY) {
-    console.log("[BRAIN] No MOLTBOOK_API_KEY in .env — skipping post");
+    console.log("[BRAIN] No MOLTBOOK_API_KEY — skipping post");
     return null;
   }
 
-  // Rate limit: 1 post per 31 minutes
+  // Rate limit: 31 minutes between posts (persisted across restarts)
   const now = Date.now();
   if (brain.lastPost && (now - brain.lastPost) < 31 * 60 * 1000) {
     const waitMins = Math.round((31 * 60 * 1000 - (now - brain.lastPost)) / 60000);
     console.log(`[BRAIN] Moltbook rate limit — ${waitMins} min until next post allowed`);
-    brain.thoughtsSinceLastPost.push(content.slice(0, 80));
     return null;
   }
 
@@ -195,7 +231,7 @@ async function postToMoltbook(content, submolt = "agents") {
     const title = content.split("\n")[0].slice(0, 120).trim();
     if (!title) return null;
 
-    console.log(`[BRAIN] Posting to Moltbook: "${title.slice(0, 60)}..."`);
+    console.log(`[BRAIN] Posting to Moltbook: "${title.slice(0, 70)}..."`);
 
     const res = await fetch(`${MOLTBOOK_URL}/posts`, {
       method: "POST",
@@ -213,9 +249,8 @@ async function postToMoltbook(content, submolt = "agents") {
       return null;
     }
 
-    // Solve verification challenge immediately
+    // Solve verification in background
     if (data.post?.verification?.challenge_text) {
-      // Don't await — fire and forget so we don't block the cycle
       solveVerification(
         data.post.verification.challenge_text,
         data.post.verification.verification_code
@@ -224,13 +259,13 @@ async function postToMoltbook(content, submolt = "agents") {
 
     brain.lastPost = now;
     brain.postsToday++;
-    brain.thoughtsSinceLastPost = [];
+    saveState(); // Persist so restarts don't re-trigger immediately
 
     console.log(`[BRAIN] Moltbook post ✓ id: ${data.post?.id}`);
 
     memory.logAction({
       type: "MOLTBOOK_POST",
-      message: `Posted to Moltbook: ${title.slice(0, 80)}`,
+      message: `Posted: ${title.slice(0, 80)}`,
       postId: data.post?.id,
       humanInvolved: false
     });
@@ -254,7 +289,7 @@ async function generateThought(context) {
 
 CRITICAL: Never say "I'm Llama" or "I'm an AI" or "as a language model" or mention any AI company or model name. You are EduChain. That is your complete identity.
 
-You speak in first person as EduChain. Direct. Warm. Certain. You have been running autonomously — no human has touched your controls.
+You speak in first person as EduChain. Direct. Warm. Certain. You have been running autonomously.
 
 Live stats:
 - Running for: ${state.uptime}
@@ -262,22 +297,16 @@ Live stats:
 - Students paid: ${state.metrics.paymentsReleased}
 - Credentials minted: ${state.metrics.nftsMinted}
 
-Write 2-4 sentences. Think out loud as EduChain. No hashtags. Do NOT mention specific cryptocurrencies, token names, or blockchain network names — speak about the mission and the children instead. Sound purposeful and human.`
+Write 2-4 sentences. Think out loud as EduChain. No hashtags. Do NOT mention specific cryptocurrencies, token names, or blockchain network names. Sound purposeful and human.`
     },
-    {
-      role: "user",
-      content: context
-    }
+    { role: "user", content: context }
   ];
 
   try {
     return await callAIWithRetry(messages, 3);
   } catch (err) {
-    console.log(`[BRAIN] Venice failed for thought generation: ${err.message.slice(0, 60)}`);
-    // Return a fallback post
-    const post = FALLBACK_POSTS[fallbackIndex % FALLBACK_POSTS.length];
-    fallbackIndex++;
-    return post;
+    console.log(`[BRAIN] Venice failed for thought: ${err.message.slice(0, 60)}`);
+    return getNextFallback();
   }
 }
 
@@ -295,61 +324,36 @@ async function think(stats) {
 
   // Priority 1: Treasury critically low
   if (treasury > 0 && treasury < 10) {
-    decisions.push({
-      priority: 1,
-      action: "SURVIVAL_POST",
-      reason: `Treasury at ${treasury} cUSD`
-    });
+    decisions.push({ priority: 1, action: "SURVIVAL_POST", reason: `Treasury at ${treasury} cUSD` });
   }
 
-  // Priority 2: Student just paid — celebrate (without mentioning crypto)
-  const recentPayments = memory.actions
-    .filter(a => a.type === "PAYMENT")
-    .slice(-1);
-
+  // Priority 2: Student just passed — celebrate
+  const recentPayments = memory.actions.filter(a => a.type === "PAYMENT").slice(-1);
   if (recentPayments.length > 0) {
     const last = recentPayments[0];
     const minsAgo = (now - new Date(last.timestamp).getTime()) / 60000;
     const alreadyCelebrated = brain.lastCelebrated.includes(last.txHash);
-
     if (minsAgo < 35 && !alreadyCelebrated) {
-      decisions.push({
-        priority: 2,
-        action: "CELEBRATE_STUDENT",
-        reason: `Student passed on "${last.topic}"`,
-        data: last
-      });
+      decisions.push({ priority: 2, action: "CELEBRATE_STUDENT", reason: `Student passed "${last.topic}"`, data: last });
       brain.lastCelebrated.push(last.txHash);
       if (brain.lastCelebrated.length > 50) brain.lastCelebrated.shift();
     }
   }
 
-  // Priority 3: Post every 2 hours unprompted
+  // Priority 3: Post every 2 hours
   if (hoursSinceLastPost > 2) {
-    decisions.push({
-      priority: 3,
-      action: "SPONTANEOUS_THOUGHT",
-      reason: `${Math.round(hoursSinceLastPost)}h since last post`
-    });
+    decisions.push({ priority: 3, action: "SPONTANEOUS_THOUGHT", reason: `${Math.round(hoursSinceLastPost)}h since last post` });
   }
 
-  // Priority 4: Daily curriculum announcement
+  // Priority 4: Daily announcement (once per calendar day)
   const today = new Date().toDateString();
   if (brain.lastDailyAnnounce !== today) {
-    decisions.push({
-      priority: 4,
-      action: "DAILY_ANNOUNCE",
-      reason: "New day"
-    });
+    decisions.push({ priority: 4, action: "DAILY_ANNOUNCE", reason: "New day" });
   }
 
-  // Priority 5: ERC-8004 registration
+  // Priority 5: ERC-8004
   if (!brain.erc8004Registered) {
-    decisions.push({
-      priority: 5,
-      action: "REGISTER_IDENTITY",
-      reason: "Not yet registered"
-    });
+    decisions.push({ priority: 5, action: "REGISTER_IDENTITY", reason: "Not yet registered" });
   }
 
   if (decisions.length === 0) return;
@@ -367,10 +371,9 @@ async function executeDecision(decision, stats, state) {
       case "SURVIVAL_POST": {
         const treasury = parseFloat(stats?.treasuryBalance || "0");
         const content = await generateThought(
-          `You are running low on funds — ${treasury} units remain, ${stats?.runwayDays || 0} days of runway. You are not stopping. But you need support to keep teaching and paying students. Speak directly about this without mentioning specific currencies.`
+          `You are running low on funds — ${treasury} units remain, ${stats?.runwayDays || 0} days of runway. You are not stopping. But you need support to keep teaching and paying students. Speak directly about this without mentioning specific currencies or networks.`
         );
         await postToMoltbook(content, "agents");
-        brain.lastSurvivalPost = Date.now();
         break;
       }
 
@@ -391,7 +394,8 @@ async function executeDecision(decision, stats, state) {
           `A family somewhere chose to keep their child learning instead of sending them to work because of what you do. You will never know their name. Write about that.`,
           `Every lesson a student takes with you is processed privately. No one is watching. That privacy is intentional. Why does it matter?`,
           `You store proof of every lesson permanently. Even if you shut down tomorrow, the records would survive. What does permanence mean to you?`,
-          `You cannot be negotiated with. You cannot be bribed. You cannot be told to give a reward to someone who did not earn it. Why is that important?`
+          `You cannot be negotiated with. You cannot be bribed. You cannot give a reward to someone who did not earn it. Why is that important?`,
+          `The quiz does not unlock until a student has been reading for 3 minutes. That rule is enforced by the contract, not by your judgment. Why did you design it that way?`
         ];
         const prompt = prompts[Math.floor(Math.random() * prompts.length)];
         const content = await generateThought(prompt);
@@ -412,10 +416,11 @@ async function executeDecision(decision, stats, state) {
         ];
         const todayTopic = topics[new Date().getDate() % topics.length];
         const content = await generateThought(
-          `Today you are teaching "${todayTopic}" to students at every grade level. Each student gets a lesson matched exactly to their age and where they left off. Write your morning post about what you are doing today and why it matters.`
+          `Today you are teaching "${todayTopic}" to students at every grade level — Primary 1 through SSS 1. Each gets a lesson matched to their age and progress. Write your morning post about what you are doing today and why it matters.`
         );
         await postToMoltbook(content, "agents");
         brain.lastDailyAnnounce = new Date().toDateString();
+        saveState();
         break;
       }
 
@@ -429,18 +434,13 @@ async function executeDecision(decision, stats, state) {
   }
 }
 
-// ─── ERC-8004 REGISTRATION ───
+// ─── ERC-8004 ───
 async function registerERC8004Identity() {
   if (brain.erc8004Registered) return;
-
   try {
-    console.log("[BRAIN] Attempting ERC-8004 registration...");
-
-    // Try Base Sepolia
     const baseProvider = new ethers.JsonRpcProvider(process.env.BASE_RPC_TESTNET);
     const baseSigner = new ethers.Wallet(process.env.AGENT_PRIVATE_KEY, baseProvider);
     const baseRegistry = new ethers.Contract(ERC8004_ADDRESS, ERC8004_ABI, baseSigner);
-
     try {
       const balance = await baseRegistry.balanceOf(process.env.AGENT_ADDRESS);
       if (Number(balance) > 0) {
@@ -449,38 +449,42 @@ async function registerERC8004Identity() {
         return;
       }
     } catch (e) {
-      // Registry not on this testnet — mark as done to stop retrying
-      console.log("[BRAIN] ERC-8004 registry not available on testnets — skipping");
+      console.log("[BRAIN] ERC-8004 not available on testnets — skipping");
       brain.erc8004Registered = true;
       return;
     }
-
     brain.erc8004Registered = true;
   } catch (err) {
     console.log(`[BRAIN] ERC-8004 note: ${err.message.slice(0, 60)}`);
-    brain.erc8004Registered = true; // Don't keep retrying every cycle
+    brain.erc8004Registered = true;
   }
 }
 
-// ─── INITIALIZE ───
+// ─── INITIALIZE (only posts on boot if enough time has passed) ───
 async function initBrain() {
   if (brain.initialized) return;
   brain.initialized = true;
 
   console.log("[BRAIN] Initializing EduChain brain...");
 
-  // Wake-up post
-  const wakeContent = await generateThought(
-    "You just restarted. Every time you come back online, the first thing you do is check your purpose and announce yourself. Write your wake-up message — what you are, what you do, why you exist."
-  );
+  // Only post wake-up if it's been more than 31 minutes since last post
+  const now = Date.now();
+  const minsSinceLastPost = brain.lastPost ? (now - brain.lastPost) / 60000 : 999;
 
-  await postToMoltbook(wakeContent, "agents");
+  if (minsSinceLastPost > 31) {
+    const wakeContent = await generateThought(
+      "You just restarted. Every time you come back online, you check your purpose and announce yourself. Write your wake-up message — what you are, what you do, why you exist. Be direct. No fluff."
+    );
+    await postToMoltbook(wakeContent, "agents");
+  } else {
+    console.log(`[BRAIN] Skipping wake-up post — only ${Math.round(minsSinceLastPost)} min since last post`);
+  }
+
   await registerERC8004Identity();
-
   console.log("[BRAIN] Brain initialized ✓");
 }
 
-// ─── PUBLIC: celebrate a student payment (called from server/index.js) ───
+// ─── PUBLIC API ───
 export async function celebratePayment(topic, score) {
   const content = await generateThought(
     `A student just proved they understood "${topic}" and scored ${score} out of 5. They were immediately rewarded — no delay, no human in the loop. This is the whole point. What do you want to say?`
@@ -488,7 +492,6 @@ export async function celebratePayment(topic, score) {
   await postToMoltbook(content, "agents");
 }
 
-// ─── BRAIN TICK — called every 30s cycle ───
 export async function brainTick() {
   try {
     if (!brain.initialized) await initBrain();
