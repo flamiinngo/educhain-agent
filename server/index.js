@@ -9,6 +9,7 @@ import { registerStudent, verifyStudent, payStudent, getContractStats, getStuden
 import { storeOnFilecoin } from "../agent/store.js";
 import { mintImpactNFT, getAllNFTs } from "../agent/nft.js";
 import { checkSurvivalMode } from "../agent/survival.js";
+import { getOrCreateStudentWallet } from "../agent/privy.js";
 import memory from "../agent/memory.js";
 import { ethers } from "ethers";
  
@@ -22,8 +23,6 @@ const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
 const IMPACT_NFT_ADDRESS = process.env.IMPACT_NFT_ADDRESS;
  
 // ─── CURRICULUM ENGINE ───
-// Assigns the right topic based on grade level and day
-// The agent decides what the child learns — not the child
 function assignTopicForGrade(grade, age) {
   const curriculum = {
     primary_1: [
@@ -109,12 +108,11 @@ function assignTopicForGrade(grade, age) {
   };
  
   const topics = curriculum[grade] || curriculum["primary_3"];
-  // Rotate daily so the child gets a different topic each day
   const day = new Date().getDate();
   return topics[day % topics.length];
 }
  
-// ─── GET /.well-known/agent.json — Agent Identity ───
+// ─── GET /.well-known/agent.json ───
 app.get("/.well-known/agent.json", async (req, res) => {
   try {
     let stats = { totalStudents: 0, totalLessons: 0, totalPaid: "0", treasuryBalance: "0", runwayDays: 0, survivalMode: false, survivalActivations: 0 };
@@ -160,7 +158,7 @@ app.get("/.well-known/agent.json", async (req, res) => {
   }
 });
  
-// ─── GET /status — Live Metrics ───
+// ─── GET /status ───
 app.get("/status", async (req, res) => {
   try {
     let stats = { totalStudents: 0, totalLessons: 0, totalPaid: "0", treasuryBalance: "0", runwayDays: 0, survivalMode: false, survivalActivations: 0 };
@@ -195,7 +193,7 @@ app.get("/status", async (req, res) => {
   }
 });
  
-// ─── GET /proof — Verifiable Proof of Autonomous Work ───
+// ─── GET /proof ───
 app.get("/proof", async (req, res) => {
   try {
     const recentPayments = memory.actions
@@ -203,7 +201,7 @@ app.get("/proof", async (req, res) => {
       .slice(-5)
       .map(a => ({
         tx: a.txHash || "pending",
-        basescan: a.txHash ? `https://sepolia.basescan.org/tx/${a.txHash}` : "pending",
+        celoscan: a.txHash ? `https://celo-sepolia.celoscan.io/tx/${a.txHash}` : "pending",
         amount: `${a.amount} cUSD`,
         topic: a.topic,
         timestamp: a.timestamp,
@@ -226,12 +224,11 @@ app.get("/proof", async (req, res) => {
   }
 });
  
-// ─── POST /message — Agent Communication + Defense ───
+// ─── POST /message ───
 app.post("/message", async (req, res) => {
   try {
     const { from, message } = req.body;
     if (!message) return res.status(400).json({ error: "Message is required", humanInvolved: false });
- 
     const response = await defendAgent(message, from || "unknown");
     res.json(response);
   } catch (err) {
@@ -244,7 +241,7 @@ app.post("/message", async (req, res) => {
   }
 });
  
-// ─── POST /register — Student Registration ───
+// ─── POST /register — Student Registration with Privy Embedded Wallet ───
 app.post("/register", async (req, res) => {
   try {
     const { phoneOrEmail, email, name, age, grade } = req.body;
@@ -253,8 +250,14 @@ app.post("/register", async (req, res) => {
     if (!contact) {
       return res.status(400).json({ error: "Phone number or email is required", humanInvolved: false });
     }
- 
-    const walletAddress = process.env.AGENT_ADDRESS;
+
+    // Get or create a real Privy embedded wallet for this student
+    // Same contact always returns the same wallet (deterministic via Privy)
+    // Falls back to ethers deterministic wallet if Privy fails
+    const privyResult = await getOrCreateStudentWallet(contact);
+    const walletAddress = privyResult.address;
+
+    console.log(`[REGISTER] Student: ${contact} → wallet: ${walletAddress} (${privyResult.fallback ? "fallback" : "privy"})`);
  
     memory.logAction({
       type: "REGISTER",
@@ -262,13 +265,15 @@ app.post("/register", async (req, res) => {
       contact,
       name: name || "Student",
       age: age || null,
-      grade: grade || null
+      grade: grade || null,
+      privyUserId: privyResult.userId
     });
  
     let registered = false;
     let verified = false;
  
     try {
+      await registerStudent(walletAddress, contact);
       registered = true;
       console.log(`[REGISTER] On-chain registration successful for ${walletAddress}`);
     } catch (err) {
@@ -294,8 +299,6 @@ app.post("/register", async (req, res) => {
     }
  
     memory.metrics.studentsRegistered++;
- 
-    // Assign today's lesson topic based on grade
     const assignedTopic = assignTopicForGrade(grade, age);
  
     res.json({
@@ -305,6 +308,9 @@ app.post("/register", async (req, res) => {
         : "Your account was created. Complete your first lesson to earn!",
       walletCreated: true,
       walletAddress,
+      privyUserId: privyResult.userId,
+      walletType: privyResult.fallback ? "deterministic" : "privy-embedded",
+      miniPayCompatible: !privyResult.fallback,
       registered,
       verified,
       assignedTopic,
@@ -318,13 +324,10 @@ app.post("/register", async (req, res) => {
   }
 });
  
-// ─── POST /lesson — Curriculum-Assigned Lesson ───
+// ─── POST /lesson ───
 app.post("/lesson", async (req, res) => {
   try {
     const { wallet, topic, age, grade, email } = req.body;
- 
-    // Agent assigns the topic — not the student
-    // If a topic was explicitly passed, use it. Otherwise assign from curriculum.
     const assignedTopic = topic || assignTopicForGrade(grade, parseInt(age) || 12);
  
     if (!assignedTopic) {
@@ -334,10 +337,21 @@ app.post("/lesson", async (req, res) => {
     console.log(`[LESSON] Assigned topic: ${assignedTopic} for grade: ${grade || "unknown"}, age: ${age || "unknown"}`);
  
     const lessonData = await generateFullLesson(assignedTopic, parseInt(age) || 12);
+
+    // Get the student's real wallet so payment goes to the right place
+    const lessonContact = wallet || email || "anonymous";
+    let lessonWalletAddress = process.env.AGENT_ADDRESS;
+    if (lessonContact !== "anonymous") {
+      try {
+        const privyResult = await getOrCreateStudentWallet(lessonContact);
+        lessonWalletAddress = privyResult.address;
+      } catch (e) {
+        console.log(`[LESSON] Wallet lookup failed, using agent address: ${e.message}`);
+      }
+    }
  
-    // Store quiz in memory for later grading
     memory.storeQuiz(lessonData.quizId, {
-      wallet: wallet || email || "anonymous",
+      wallet: lessonWalletAddress,
       topic: assignedTopic,
       quiz: lessonData.quiz,
       correctAnswers: lessonData.quiz.map(q => q.answer),
@@ -346,7 +360,7 @@ app.post("/lesson", async (req, res) => {
  
     memory.logAction({
       type: "LESSON",
-      message: `Lesson delivered: ${assignedTopic} to ${wallet || email || "anonymous"}`,
+      message: `Lesson delivered: ${assignedTopic} to ${lessonContact}`,
       topic: assignedTopic
     });
     memory.metrics.lessonsDelivered++;
@@ -358,15 +372,11 @@ app.post("/lesson", async (req, res) => {
       content: lessonData.lesson,
       quiz: lessonData.quiz.map(q => ({
         question: q.question,
-        options: Array.isArray(q.options)
-          ? q.options
-          : Object.values(q.options)
+        options: Array.isArray(q.options) ? q.options : Object.values(q.options)
       })),
       questions: lessonData.quiz.map(q => ({
         question: q.question,
-        options: Array.isArray(q.options)
-          ? q.options
-          : Object.values(q.options)
+        options: Array.isArray(q.options) ? q.options : Object.values(q.options)
       })),
       lessonId: lessonData.quizId,
       quizId: lessonData.quizId,
@@ -381,7 +391,7 @@ app.post("/lesson", async (req, res) => {
   }
 });
  
-// ─── POST /submit-quiz — Submit Answers for Grading ───
+// ─── POST /submit-quiz ───
 app.post("/submit-quiz", async (req, res) => {
   try {
     const { wallet, email, quizId, topic, answers, quizStartTime } = req.body;
@@ -395,6 +405,10 @@ app.post("/submit-quiz", async (req, res) => {
     const correctAnswers = quizData ? quizData.correctAnswers : answers;
     const startTime = new Date(Date.now() - 240000).toISOString();
     const quizTopic = topic || (quizData ? quizData.topic : "General");
+
+    // Use the student's real wallet stored at lesson time
+    const payWallet = quizData?.wallet || process.env.AGENT_ADDRESS;
+    console.log(`[SUBMIT] Paying to wallet: ${payWallet}`);
  
     const durationSeconds = Math.floor((Date.now() - new Date(startTime).getTime()) / 1000);
     const gradeResult = await gradeQuiz(answers, correctAnswers, durationSeconds, quizTopic);
@@ -417,7 +431,7 @@ app.post("/submit-quiz", async (req, res) => {
       amountPaid: gradeResult.passed && !gradeResult.suspicious ? `${gradeResult.reward} cUSD` : null,
       paymentTx: null,
       txHash: null,
-      basescan: null,
+      celoscan: null,
       filecoin: null,
       nftTokenId: null,
       feedback: gradeResult.feedback,
@@ -428,7 +442,7 @@ app.post("/submit-quiz", async (req, res) => {
       let storageResult = null;
       try {
         storageResult = await storeOnFilecoin({
-          wallet: studentId,
+          wallet: payWallet,
           topic: quizTopic,
           score: gradeResult.score,
           reward: gradeResult.reward,
@@ -444,7 +458,7 @@ app.post("/submit-quiz", async (req, res) => {
  
       try {
         const paymentResult = await payStudent(
-          process.env.AGENT_ADDRESS,
+          payWallet,
           gradeResult.score,
           quizTopic,
           filecoinCID,
@@ -453,8 +467,7 @@ app.post("/submit-quiz", async (req, res) => {
         response.paymentTx = paymentResult.txHash;
         response.txHash = paymentResult.txHash;
         response.celoscan = `https://celo-sepolia.celoscan.io/tx/${paymentResult.txHash}`;
-        response.basescan = response.celoscan;
-        console.log(`[SUBMIT] ✅ Payment sent: ${paymentResult.txHash}`);
+        console.log(`[SUBMIT] ✅ Payment sent to ${payWallet}: ${paymentResult.txHash}`);
       } catch (err) {
         console.log(`[SUBMIT] Payment note: ${err.message}`);
         response.paymentTx = "pending";
@@ -463,7 +476,7 @@ app.post("/submit-quiz", async (req, res) => {
         memory.logAction({
           type: "PAYMENT_QUEUED",
           message: `Payment queued for ${studentId}: ${err.message}`,
-          wallet: studentId,
+          wallet: payWallet,
           score: gradeResult.score,
           topic: quizTopic
         });
@@ -473,7 +486,7 @@ app.post("/submit-quiz", async (req, res) => {
  
       try {
         const nftResult = await mintImpactNFT(
-          process.env.AGENT_ADDRESS,
+          payWallet,
           quizTopic,
           gradeResult.score,
           gradeResult.reward,
@@ -497,7 +510,7 @@ app.post("/submit-quiz", async (req, res) => {
   }
 });
  
-// ─── POST /demo — Full Autonomous Lesson Cycle ───
+// ─── POST /demo ───
 app.post("/demo", async (req, res) => {
   try {
     const startTime = Date.now();
@@ -559,7 +572,7 @@ app.post("/demo", async (req, res) => {
         lesson: { topic, content: lessonData.lesson, generatedBy: "venice-ai", model: "llama-3.3-70b", humanInvolved: false },
         quiz: { questions: lessonData.quiz, generatedBy: "venice-ai", humanInvolved: false },
         grade: { score: gradeResult.score, outOf: 5, passed: gradeResult.passed, gradedBy: "ai", humanInvolved: false },
-        payment: { amount: `${gradeResult.reward} cUSD`, tx: paymentResult.txHash, network: "base-sepolia", humanInvolved: false },
+        payment: { amount: `${gradeResult.reward} cUSD`, tx: paymentResult.txHash, network: "celo-sepolia", humanInvolved: false },
         storage: { filecoinCID: storageResult.filecoinCID, ipfsGateway: storageResult.ipfsGateway, humanInvolved: false },
         nft: { tokenId: nftResult.tokenId, mintTx: nftResult.mintTx || "pending", listedForSale: true, price: "1 cUSD", humanInvolved: false }
       },
@@ -639,4 +652,3 @@ app.listen(PORT, () => {
 });
  
 export default app;
- 
