@@ -10,6 +10,7 @@ import { storeOnFilecoin } from "../agent/store.js";
 import { mintImpactNFT, getAllNFTs } from "../agent/nft.js";
 import { checkSurvivalMode, fundTreasuryFromNFTSale, getNFTPrice } from "../agent/survival.js";
 import { getOrCreateStudentWallet } from "../agent/privy.js";
+import { logPayment, logNFTMint, logFilecoinStore, logDecision, incrementCycles, getLog } from "../agent/logger.js";
 import memory from "../agent/memory.js";
 import { ethers } from "ethers";
 
@@ -458,6 +459,7 @@ app.post("/submit-quiz", async (req, res) => {
           gateway: storageResult.ipfsGateway,
           ipfsUrl: `https://ipfs.io/ipfs/${filecoinCID}`
         };
+        logFilecoinStore({ cid: filecoinCID, contentType: 'lesson-proof', ipfsUrl: storageResult.ipfsGateway });
       }
 
       // ── Step 2: Pay student in cUSD on Celo ──
@@ -482,6 +484,7 @@ app.post("/submit-quiz", async (req, res) => {
         response.celoscan = `https://celo-sepolia.celoscan.io/tx/${paymentResult.txHash}`;
         response.paymentTx = paymentResult.txHash;
         console.log(`[SUBMIT] ✅ Payment sent to ${payWallet}: ${paymentResult.txHash}`);
+        logPayment({ txHash: paymentResult.txHash, amount: gradeResult.reward, to: payWallet, topic: quizTopic, score: gradeResult.score });
 
         memory.logAction({
           type: "PAYMENT",
@@ -547,6 +550,7 @@ app.post("/submit-quiz", async (req, res) => {
 
         memory.metrics.nftsMinted++;
         console.log(`[SUBMIT] ✅ NFT minted: #${nftResult.tokenId} (${nftResult.theme})`);
+        logNFTMint({ txHash: nftResult.txHash, tokenId: nftResult.tokenId, topic: quizTopic, theme: nftResult.theme, studentWallet: payWallet, imageUrl: nftResult.imageUrl, raribleUrl: nftResult.raribleUrl });
       } catch (err) {
         console.log(`[SUBMIT] NFT note: ${err.message}`);
       }
@@ -729,6 +733,17 @@ app.get("/survival-status", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message, humanInvolved: false });
   }
+});
+
+// ─── GET /agent-log ───────────────────────────────────────────────────────────
+app.get("/agent-log", (req, res) => {
+  const log = getLog();
+  res.setHeader('Content-Disposition', 'attachment; filename="agent_log.json"');
+  res.json(log);
+});
+
+app.get("/agent_log.json", (req, res) => {
+  res.json(getLog());
 });
 
 // ─── Serve frontend pages ─────────────────────────────────────────────────────
