@@ -448,3 +448,68 @@ export async function mintImpactNFT({ studentName, studentWallet, topic, grade, 
     humanInvolved: false,
   };
 }
+
+// ─── Get all minted NFTs ──────────────────────────────────────────────────────
+
+export async function getAllNFTs() {
+  try {
+    const provider = new ethers.JsonRpcProvider(BASE_RPC);
+    const contract = new ethers.Contract(NFT_CONTRACT, NFT_ABI, provider);
+
+    let totalSupply = 0;
+    try {
+      totalSupply = Number(await contract.totalSupply());
+    } catch (e) {
+      // contract may not have totalSupply — return empty
+      return { totalMinted: 0, totalSold: 0, totalRaisedCUSD: '0', nfts: [] };
+    }
+
+    const nfts = [];
+    for (let i = 1; i <= totalSupply; i++) {
+      try {
+        const uri = await contract.tokenURI(i);
+        // Resolve IPFS metadata
+        let meta = {};
+        try {
+          const cid = uri.replace('ipfs://', '');
+          const res = await fetch(`https://ipfs.io/ipfs/${cid}`);
+          meta = await res.json();
+        } catch (e) {}
+
+        const topic = meta.attributes?.find(a => a.trait_type === 'Topic')?.value || 'General';
+        const grade = meta.attributes?.find(a => a.trait_type === 'Grade')?.value || '';
+        const score = meta.attributes?.find(a => a.trait_type === 'Score')?.value || 0;
+        const style = meta.attributes?.find(a => a.trait_type === 'Art Style')?.value || '';
+
+        const imageCID = meta.image ? meta.image.replace('ipfs://', '') : null;
+
+        nfts.push({
+          tokenId: i,
+          name: meta.name || `EduChain Impact NFT #${i}`,
+          topic,
+          grade,
+          score,
+          theme: style,
+          imageUrl: imageCID ? `https://ipfs.io/ipfs/${imageCID}` : null,
+          filecoinCID: imageCID,
+          metaCID: uri.replace('ipfs://', ''),
+          raribleUrl: `https://testnet.rarible.com/token/base/${NFT_CONTRACT}:${i}`,
+          openseaUrl: `https://testnets.opensea.io/assets/base-sepolia/${NFT_CONTRACT}/${i}`,
+          humanInvolved: false,
+        });
+      } catch (e) {
+        // skip tokens that fail
+      }
+    }
+
+    return {
+      totalMinted: totalSupply,
+      totalSold: 0,
+      totalRaisedCUSD: '0',
+      nfts,
+    };
+  } catch (err) {
+    console.log(`[NFT] getAllNFTs error: ${err.message.slice(0, 80)}`);
+    return { totalMinted: 0, totalSold: 0, totalRaisedCUSD: '0', nfts: [] };
+  }
+}
