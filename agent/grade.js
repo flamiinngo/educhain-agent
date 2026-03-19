@@ -1,52 +1,41 @@
 import dotenv from "dotenv";
 dotenv.config();
-
 import { callAI } from "./teach.js";
 
 async function gradeQuiz(studentAnswers, correctAnswers, quizDurationSeconds, topic) {
   console.log(`[GRADE] Grading quiz: ${topic}`);
   console.log(`[GRADE] Duration: ${quizDurationSeconds}s`);
 
-  // Quick local scoring
+  // Score — compare numeric indices
   let score = 0;
   for (let i = 0; i < 5; i++) {
-    if (studentAnswers[i] && correctAnswers[i] &&
+    if (studentAnswers[i] !== undefined && correctAnswers[i] !== undefined &&
         String(studentAnswers[i]) === String(correctAnswers[i])) {
       score++;
     }
   }
 
-  // Check for suspicious behavior
+  // Suspicious detection
   let suspicious = false;
   let suspiciousReason = "";
 
-  if (quizDurationSeconds < 3
-) {
+  if (quizDurationSeconds < 3) {
     suspicious = true;
     suspiciousReason = `Quiz completed in ${quizDurationSeconds}s — minimum is 180s`;
   }
 
+  // Only flag identical answers if they're all 0 AND score is 0 (likely default/untouched)
+  // Don't flag if the correct answers happen to all be the same index
   const allSame = studentAnswers.every(a => a === studentAnswers[0]);
-  if (allSame) {
+  if (allSame && score === 0) {
     suspicious = true;
-    suspiciousReason = "All answers identical — mechanical pattern detected";
-  }
-
-  const sequential = ["A", "B", "C", "D", "A"];
-  const isSequential = studentAnswers.every((a, i) => String(a) === String(sequential[i]));
-  if (isSequential) {
-    suspicious = true;
-    suspiciousReason = "Sequential answer pattern — likely bot";
+    suspiciousReason = "All answers identical and all wrong — mechanical pattern detected";
   }
 
   const passed = score >= 4 && !suspicious;
+  const reward = passed ? (score === 5 ? 0.50 : 0.25) : 0;
 
-  let reward = 0;
-  if (passed) {
-    reward = score === 5 ? 0.50 : 0.25;
-  }
-
-  // Generate feedback
+  // Feedback
   let feedback = "";
   try {
     const messages = [

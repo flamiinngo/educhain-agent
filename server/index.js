@@ -352,7 +352,15 @@ app.post("/lesson", async (req, res) => {
       wallet: lessonWalletAddress,
       topic: assignedTopic,
       quiz: lessonData.quiz,
-      correctAnswers: lessonData.quiz.map(q => q.answer),
+      correctAnswers: lessonData.quiz.map(q => {
+        if (typeof q.answer === 'number') return q.answer;
+        const letter = String(q.answer).trim().toUpperCase();
+        const letterIndex = ['A','B','C','D','E'].indexOf(letter);
+        if (letterIndex >= 0) return letterIndex;
+        const opts = Array.isArray(q.options) ? q.options : Object.values(q.options || {});
+        const textIndex = opts.findIndex(o => o === q.answer);
+        return textIndex >= 0 ? textIndex : 0;
+      }),
       quizStartTime: new Date().toISOString()
     });
 
@@ -462,15 +470,17 @@ app.post("/submit-quiz", async (req, res) => {
         logFilecoinStore({ cid: filecoinCID, contentType: 'lesson-proof', ipfsUrl: storageResult.ipfsGateway });
       }
 
-      // ── Step 2: Pay student in cUSD on Celo ──
+      // ── Step 2: Pay student in cUSD on Celo (direct transfer, no registration needed) ──
       try {
-        const paymentResult = await payStudent(
-          payWallet,
-          gradeResult.score,
-          quizTopic,
-          filecoinCID,
-          startTime
-        );
+        const celoProvider = new ethers.JsonRpcProvider(process.env.CELO_RPC);
+        const celoWallet = new ethers.Wallet(process.env.AGENT_PRIVATE_KEY, celoProvider);
+        const cusdABI = ['function transfer(address to, uint256 amount) public returns (bool)'];
+        const cusdContract = new ethers.Contract(process.env.CELO_MOCK_CUSD_ADDRESS, cusdABI, celoWallet);
+        const rewardAmount = ethers.parseEther(String(gradeResult.reward || '0.10'));
+        const transferTx = await cusdContract.transfer(payWallet, rewardAmount);
+        const transferReceipt = await transferTx.wait();
+        const paymentResult = { txHash: transferReceipt.hash };
+
         response.payment = {
           amount: `${gradeResult.reward} cUSD`,
           to: payWallet,

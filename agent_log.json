@@ -58,9 +58,57 @@
       "network": "Celo Sepolia",
       "celoscan": "https://celo-sepolia.celoscan.io/tx/0x24ee7e5f7386fe32ddf92968df9e962766af08d720646469c3df95e4855582ff",
       "humanInvolved": false
+    },
+    {
+      "timestamp": "2026-03-19T10:54:47.135Z",
+      "txHash": "0xe2f622e2502b0e21cbf2ab90418224b5f191e7ec216327a3904a0d00e1ee086b",
+      "amount": 0.5,
+      "to": "0x25902c102BD25Fc43B9b5a3dF93d035c3CFC60ad",
+      "topic": "Writing Clear Paragraphs",
+      "score": 5,
+      "network": "Celo Sepolia",
+      "celoscan": "https://celo-sepolia.celoscan.io/tx/0xe2f622e2502b0e21cbf2ab90418224b5f191e7ec216327a3904a0d00e1ee086b",
+      "humanInvolved": false
     }
   ],
-  "nftMints": [],
+  "nftMints": [
+    {
+      "timestamp": "2026-03-19T10:28:56.553Z",
+      "txHash": "0x535e4fa4cb338f94d9279fdb4bd588be4c463bf799c35f2abc53a2463de477e0",
+      "tokenId": "3",
+      "topic": "Writing Clear Paragraphs",
+      "theme": "Cosmic Signal",
+      "studentWallet": "0x25902c102BD25Fc43B9b5a3dF93d035c3CFC60ad",
+      "imageUrl": "https://superrare.myfilebase.com/ipfs/QmPvws8F4D2qo9yYVRLsxXE38JRnWzf2faJasKP8Z1FarE",
+      "raribleUrl": "https://testnet.rarible.com/token/base/0x9c3be85309BC9d6D258cb3f571B979eC5DC6ecB9:3",
+      "basescan": "https://sepolia.basescan.org/tx/0x535e4fa4cb338f94d9279fdb4bd588be4c463bf799c35f2abc53a2463de477e0",
+      "humanInvolved": false
+    },
+    {
+      "timestamp": "2026-03-19T10:35:38.128Z",
+      "txHash": "0x453c22224d3c20facb05cdd6d321547fcffe79b263460b6a3d13cbde45498516",
+      "tokenId": "4",
+      "topic": "Writing Clear Paragraphs",
+      "theme": "Cosmic Signal",
+      "studentWallet": "0x25902c102BD25Fc43B9b5a3dF93d035c3CFC60ad",
+      "imageUrl": "https://superrare.myfilebase.com/ipfs/Qme6x6GV4gXZe35xoVUesxxHWVR6UiLJGKyaZWGN83QkMw",
+      "raribleUrl": "https://testnet.rarible.com/token/base/0x9c3be85309BC9d6D258cb3f571B979eC5DC6ecB9:4",
+      "basescan": "https://sepolia.basescan.org/tx/0x453c22224d3c20facb05cdd6d321547fcffe79b263460b6a3d13cbde45498516",
+      "humanInvolved": false
+    },
+    {
+      "timestamp": "2026-03-19T10:55:06.927Z",
+      "txHash": "0x8a33057d1864fedc4fd5693353edfaa495a0b14d9524a734efd4257b78a37c1b",
+      "tokenId": "5",
+      "topic": "Writing Clear Paragraphs",
+      "theme": "Cosmic Signal",
+      "studentWallet": "0x25902c102BD25Fc43B9b5a3dF93d035c3CFC60ad",
+      "imageUrl": "https://superrare.myfilebase.com/ipfs/QmPthESdFQB57WNgkdZw2ymsnjB1m7VTRJk9bx58adjXXR",
+      "raribleUrl": "https://testnet.rarible.com/token/base/0x9c3be85309BC9d6D258cb3f571B979eC5DC6ecB9:5",
+      "basescan": "https://sepolia.basescan.org/tx/0x8a33057d1864fedc4fd5693353edfaa495a0b14d9524a734efd4257b78a37c1b",
+      "humanInvolved": false
+    }
+  ],
   "moltbookPosts": [],
   "filecoinStores": [
     {
@@ -69,18 +117,39 @@
       "contentType": "lesson-proof",
       "ipfsUrl": "https://gateway.pinata.cloud/ipfs/QmWqXMmaGWBdrnhgTEJBq7ttpXiRL8uNnyHnmSBWZz9De5",
       "humanInvolved": false
+    },
+    {
+      "timestamp": "2026-03-19T10:28:31.521Z",
+      "cid": "QmXD5ULaTZV373pZW1UMJFEuDbReQMHShyfMw8V8tKn42q",
+      "contentType": "lesson-proof",
+      "ipfsUrl": "https://gateway.pinata.cloud/ipfs/QmXD5ULaTZV373pZW1UMJFEuDbReQMHShyfMw8V8tKn42q",
+      "humanInvolved": false
+    },
+    {
+      "timestamp": "2026-03-19T10:35:15.552Z",
+      "cid": "QmbKoeYC5vxTNi3FPJPyA64wZW5Qnmt7k9DNtyQx9uXEHg",
+      "contentType": "lesson-proof",
+      "ipfsUrl": "https://gateway.pinata.cloud/ipfs/QmbKoeYC5vxTNi3FPJPyA64wZW5Qnmt7k9DNtyQx9uXEHg",
+      "humanInvolved": false
+    },
+    {
+      "timestamp": "2026-03-19T10:54:36.877Z",
+      "cid": "QmdYtetkYFT1u61YYJc2Ps3fTvibgXG11PMvYDqYzb1NNK",
+      "contentType": "lesson-proof",
+      "ipfsUrl": "https://gateway.pinata.cloud/ipfs/QmdYtetkYFT1u61YYJc2Ps3fTvibgXG11PMvYDqYzb1NNK",
+      "humanInvolved": false
     }
   ],
   "summary": {
     "totalCycles": 0,
     "totalDecisions": 0,
     "totalToolCalls": 0,
-    "totalPayments": 1,
-    "totalNFTsMinted": 0,
+    "totalPayments": 2,
+    "totalNFTsMinted": 3,
     "totalMoltbookPosts": 0,
-    "totalFilecoinStores": 1,
+    "totalFilecoinStores": 4,
     "totalRetries": 0,
     "totalFailures": 0,
-    "lastUpdated": "2026-03-19T02:50:38.804Z"
+    "lastUpdated": "2026-03-19T10:55:06.927Z"
   }
 }
