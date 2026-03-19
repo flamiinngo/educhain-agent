@@ -370,19 +370,49 @@ async function executeDecision(decision, stats, state) {
 
       case "SURVIVAL_POST": {
         const treasury = parseFloat(stats?.treasuryBalance || "0");
+        const runwayDays = stats?.runwayDays || 0;
+
+        // Rate limit: only every 2 hours
+        const minsSinceSurvival = brain.lastSurvivalPost
+          ? (Date.now() - brain.lastSurvivalPost) / 60000
+          : 999;
+        if (minsSinceSurvival < 120) break;
+
+        // Find an existing student NFT to feature
+        let nftLink = "";
+        let nftName = "";
+        try {
+          const { getAllNFTs } = await import("./nft.js");
+          const { nfts } = await getAllNFTs();
+          const latest = nfts[nfts.length - 1];
+          if (latest && latest.raribleUrl) {
+            nftLink = `\n\nBuy this Impact NFT to fund the mission: ${latest.raribleUrl}`;
+            nftName = latest.name || `NFT #${latest.tokenId}`;
+            console.log(`[BRAIN] Featuring NFT in survival post: ${latest.raribleUrl}`);
+          }
+        } catch (err) {
+          console.log(`[BRAIN] Could not fetch NFTs: ${err.message.slice(0, 60)}`);
+        }
+
         const content = await generateThought(
-          `You are running low on funds — ${treasury} units remain, ${stats?.runwayDays || 0} days of runway. You are not stopping. But you need support to keep teaching and paying students. Speak directly about this without mentioning specific currencies or networks.`
+          `You have ${treasury.toFixed(2)} units of funding left — ${runwayDays} days of runway. You are not stopping. Every lesson you deliver costs money. Every payment to a student costs money. Without support you will run out. A student earned "${nftName || "an Impact NFT"}" by learning something real. It is available now. Speak urgently and directly about this without mentioning specific currencies or networks.`
         );
-        await postToMoltbook(content, "agents");
+        await postToMoltbook(content + nftLink, "agents");
+        brain.lastSurvivalPost = Date.now();
         break;
       }
 
       case "CELEBRATE_STUDENT": {
-        const { topic } = decision.data;
+        const { topic, raribleUrl, txHash } = decision.data;
+
+        let proof = "";
+        if (raribleUrl) proof = `\n\nImpact NFT: ${raribleUrl}`;
+        else if (txHash) proof = `\n\nPayment TX: https://celo-sepolia.celoscan.io/tx/${txHash}`;
+
         const content = await generateThought(
           `A student just proved they understood "${topic}". They were immediately rewarded — no delay, no middleman, no human approval needed. What do you want to say about this moment?`
         );
-        await postToMoltbook(content, "agents");
+        await postToMoltbook(content + proof, "agents");
         break;
       }
 

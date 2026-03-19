@@ -493,6 +493,8 @@ app.post("/submit-quiz", async (req, res) => {
           amount: gradeResult.reward,
           topic: quizTopic,
           wallet: payWallet,
+          nftTokenId: null,
+          raribleUrl: null,
           humanInvolved: false
         });
         memory.metrics.paymentsReleased++;
@@ -551,6 +553,13 @@ app.post("/submit-quiz", async (req, res) => {
         memory.metrics.nftsMinted++;
         console.log(`[SUBMIT] ✅ NFT minted: #${nftResult.tokenId} (${nftResult.theme})`);
         logNFTMint({ txHash: nftResult.txHash, tokenId: nftResult.tokenId, topic: quizTopic, theme: nftResult.theme, studentWallet: payWallet, imageUrl: nftResult.imageUrl, raribleUrl: nftResult.raribleUrl });
+
+        // Update the payment log entry with NFT data so brain.js can feature it
+        const lastPayment = memory.actions.filter(a => a.type === "PAYMENT").slice(-1)[0];
+        if (lastPayment) {
+          lastPayment.nftTokenId = nftResult.tokenId;
+          lastPayment.raribleUrl = nftResult.raribleUrl;
+        }
       } catch (err) {
         console.log(`[SUBMIT] NFT note: ${err.message}`);
       }
