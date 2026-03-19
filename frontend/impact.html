@@ -1,130 +1,452 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EduChain — Impact NFTs</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #fff; min-height: 100vh; }
-    .container { max-width: 900px; margin: 0 auto; padding: 30px 20px; }
-    
-    h1 { font-size: 2em; background: linear-gradient(135deg, #00ff88, #00bbff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; }
-    .subtitle { text-align: center; color: #888; margin: 10px 0 30px; }
-    
-    .impact-stats { display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; margin-bottom: 30px; }
-    .impact-stat { background: #111; border: 1px solid #222; border-radius: 10px; padding: 15px 25px; text-align: center; }
-    .impact-stat .value { font-size: 1.6em; font-weight: bold; color: #00ff88; }
-    .impact-stat .label { font-size: 0.8em; color: #888; margin-top: 4px; }
-    
-    .nft-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-    .nft-card { background: #111; border: 1px solid #222; border-radius: 12px; overflow: hidden; transition: transform 0.3s, border-color 0.3s; }
-    .nft-card:hover { transform: translateY(-3px); border-color: #00ff88; }
-    .nft-header { background: linear-gradient(135deg, #003322, #002244); padding: 15px; }
-    .nft-header h3 { color: #00ff88; font-size: 1.1em; }
-    .nft-header .nft-id { color: #555; font-size: 0.85em; }
-    .nft-body { padding: 15px; }
-    .nft-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #1a1a1a; font-size: 0.9em; }
-    .nft-row .key { color: #888; }
-    .nft-row .val { color: #fff; }
-    .nft-row a { color: #00bbff; text-decoration: none; }
-    .nft-row a:hover { text-decoration: underline; }
-    .nft-footer { padding: 15px; text-align: center; }
-    .btn-buy { display: inline-block; padding: 10px 25px; background: linear-gradient(135deg, #00ff88, #00bbff); color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1em; }
-    .btn-buy:hover { opacity: 0.9; }
-    .btn-sold { background: #333; color: #888; cursor: default; }
-    
-    .empty { text-align: center; padding: 60px; color: #555; }
-    .back { display: inline-block; color: #888; text-decoration: none; margin-bottom: 20px; }
-    .back:hover { color: #fff; }
-    .footer { text-align: center; padding: 30px; color: #444; font-size: 0.9em; margin-top: 30px; }
-    .footer span { color: #00ff88; }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EduChain — Impact NFTs</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --border: rgba(255,255,255,0.07);
+    --text: #e8e8f0;
+    --muted: #888899;
+    --green: #00e5a0;
+    --purple: #9b59f5;
+    --blue: #4fa3ff;
+    --gold: #f5c842;
+    --red: #ff4757;
+    --orange: #ff7043;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; min-height: 100vh; }
+
+  nav { border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-size: 13px; color: var(--green); letter-spacing: 3px; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: 12px; margin-left: 24px; letter-spacing: 1px; }
+  .nav-links a:hover { color: var(--text); }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 48px 24px 120px; }
+
+  /* ── Survival bar ── */
+  .survival-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+    margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .survival-label { font-size: 11px; color: var(--muted); letter-spacing: 2px; }
+  .survival-level {
+    font-size: 12px;
+    letter-spacing: 2px;
+    padding: 4px 12px;
+    border: 1px solid;
+  }
+  .survival-level.HEALTHY   { color: var(--green);  border-color: var(--green); }
+  .survival-level.WARNING   { color: var(--gold);   border-color: var(--gold); }
+  .survival-level.CRITICAL  { color: var(--orange); border-color: var(--orange); }
+  .survival-level.EMERGENCY { color: var(--red);    border-color: var(--red); }
+  .survival-level.SHUTDOWN  { color: #fff;           border-color: #fff; background: var(--red); }
+
+  .survival-treasury { font-size: 22px; color: var(--green); font-weight: bold; }
+  .survival-runway { font-size: 12px; color: var(--muted); }
+  .survival-raised { font-size: 12px; color: var(--purple); margin-left: auto; }
+
+  /* ── Treasury meter ── */
+  .treasury-meter { width: 100%; height: 4px; background: var(--border); margin-top: 12px; }
+  .treasury-fill { height: 100%; background: var(--green); transition: width 0.5s; }
+
+  /* ── Header ── */
+  .page-header { margin-bottom: 40px; }
+  .page-header h1 { font-size: 28px; font-weight: normal; letter-spacing: 2px; margin-bottom: 8px; }
+  .page-header p { color: var(--muted); font-size: 13px; line-height: 1.6; max-width: 600px; }
+
+  /* ── Stats row ── */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 40px; }
+  @media (max-width: 700px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+  .stat-box { background: var(--surface); border: 1px solid var(--border); padding: 20px; }
+  .stat-value { font-size: 28px; font-weight: bold; color: var(--green); margin-bottom: 4px; }
+  .stat-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; }
+
+  /* ── NFT grid ── */
+  .nft-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+  .nft-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition: border-color 0.2s;
+    overflow: hidden;
+  }
+  .nft-card:hover { border-color: rgba(155,89,245,0.4); }
+  .nft-art { width: 100%; aspect-ratio: 1; background: #050508; overflow: hidden; }
+  .nft-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .nft-art-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--border); font-size: 11px; letter-spacing: 2px; }
+  .nft-info { padding: 16px; }
+  .nft-title { font-size: 14px; color: var(--text); margin-bottom: 6px; }
+  .nft-topic { font-size: 11px; color: var(--purple); letter-spacing: 2px; margin-bottom: 12px; }
+  .nft-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .nft-score { font-size: 11px; color: var(--muted); }
+  .nft-price { font-size: 14px; color: var(--gold); font-weight: bold; }
+  .nft-links { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .nft-link { font-size: 10px; color: var(--muted); text-decoration: none; border: 1px solid var(--border); padding: 4px 8px; letter-spacing: 1px; transition: all 0.15s; }
+  .nft-link:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+  .btn-buy {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--purple);
+    color: var(--purple);
+    padding: 10px;
+    font-family: inherit;
+    font-size: 12px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-buy:hover { background: var(--purple); color: #fff; }
+  .btn-buy:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-buy.buying { border-color: var(--gold); color: var(--gold); }
+  .btn-buy.bought { border-color: var(--green); color: var(--green); }
+
+  /* ── Empty state ── */
+  .empty { text-align: center; padding: 80px 0; color: var(--muted); }
+  .empty h2 { font-size: 18px; font-weight: normal; letter-spacing: 2px; margin-bottom: 16px; color: var(--text); }
+  .empty p { font-size: 13px; line-height: 1.7; max-width: 400px; margin: 0 auto 32px; }
+  .btn-learn { display: inline-block; background: transparent; border: 1px solid var(--green); color: var(--green); padding: 12px 28px; font-family: inherit; font-size: 12px; letter-spacing: 2px; cursor: pointer; text-decoration: none; transition: all 0.2s; }
+  .btn-learn:hover { background: var(--green); color: #000; }
+
+  /* ── Buy modal ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 40px;
+    max-width: 460px;
+    width: 90%;
+  }
+  .modal h2 { font-size: 16px; font-weight: normal; letter-spacing: 2px; margin-bottom: 8px; }
+  .modal-subtitle { font-size: 12px; color: var(--muted); margin-bottom: 32px; }
+  .modal-nft-preview { display: flex; gap: 16px; margin-bottom: 28px; }
+  .modal-nft-thumb { width: 80px; height: 80px; flex-shrink: 0; background: #050508; }
+  .modal-nft-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .modal-nft-details { flex: 1; }
+  .modal-nft-name { font-size: 14px; margin-bottom: 4px; }
+  .modal-nft-price { font-size: 24px; color: var(--gold); font-weight: bold; }
+  .modal-nft-impact { font-size: 11px; color: var(--green); margin-top: 4px; }
+  .form-group { margin-bottom: 20px; }
+  .form-group label { display: block; font-size: 11px; color: var(--muted); letter-spacing: 2px; margin-bottom: 8px; }
+  .form-group input { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 12px 14px; font-family: inherit; font-size: 13px; outline: none; transition: border-color 0.2s; }
+  .form-group input:focus { border-color: var(--purple); }
+  .modal-actions { display: flex; gap: 12px; margin-top: 8px; }
+  .btn-confirm { flex: 1; background: transparent; border: 1px solid var(--purple); color: var(--purple); padding: 12px; font-family: inherit; font-size: 12px; letter-spacing: 2px; cursor: pointer; transition: all 0.2s; }
+  .btn-confirm:hover { background: var(--purple); color: #fff; }
+  .btn-cancel { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 12px 20px; font-family: inherit; font-size: 12px; letter-spacing: 2px; cursor: pointer; transition: all 0.2s; }
+  .btn-cancel:hover { border-color: var(--text); color: var(--text); }
+  .modal-error { font-size: 12px; color: var(--red); margin-top: 12px; min-height: 20px; }
+
+  /* ── Success banner ── */
+  .success-banner { display: none; background: rgba(0,229,160,0.05); border: 1px solid var(--green); padding: 20px 24px; margin-bottom: 24px; }
+  .success-banner.show { display: block; }
+  .success-banner p { font-size: 13px; color: var(--green); margin-bottom: 8px; }
+  .success-banner a { color: var(--green); font-size: 12px; }
+
+  .loading { text-align: center; padding: 60px; color: var(--muted); font-size: 12px; letter-spacing: 2px; }
+  .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .status-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); padding: 10px 32px; font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; letter-spacing: 1px; }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: inline-block; margin-right: 6px; }
+</style>
 </head>
 <body>
 
-  <div class="container">
-    <a href="/" class="back">← Back to Dashboard</a>
-    <h1>🖼️ Impact NFTs</h1>
-    <p class="subtitle">Every NFT is proof a child learned something. Buy one to fund the next lesson.</p>
+<nav>
+  <div class="logo">EDUCHAIN</div>
+  <div class="nav-links">
+    <a href="/">HOME</a>
+    <a href="/learn">LEARN</a>
+    <a href="/agent.html">AGENT</a>
+  </div>
+</nav>
 
-    <div class="impact-stats">
-      <div class="impact-stat"><div class="value" id="totalMinted">0</div><div class="label">Total Minted</div></div>
-      <div class="impact-stat"><div class="value" id="totalSold">0</div><div class="label">Total Sold</div></div>
-      <div class="impact-stat"><div class="value" id="totalRaised">$0</div><div class="label">Raised (cUSD)</div></div>
+<div class="container">
+
+  <!-- Success banner -->
+  <div class="success-banner" id="success-banner">
+    <p id="success-msg">NFT purchased. Treasury funded.</p>
+    <a id="success-link" href="#" target="_blank">View on CeloScan →</a>
+  </div>
+
+  <!-- Survival bar -->
+  <div class="survival-bar" id="survival-bar" style="display:none">
+    <div>
+      <div class="survival-label">TREASURY STATUS</div>
+      <div class="survival-treasury" id="treasury-balance">—</div>
+      <div class="survival-runway" id="runway-label">—</div>
     </div>
+    <div class="survival-level HEALTHY" id="survival-level">HEALTHY</div>
+    <div class="survival-raised" id="raised-label">—</div>
+  </div>
 
-    <div class="nft-grid" id="nftGrid">
-      <div class="empty">No Impact NFTs minted yet. Complete a lesson to mint the first one!</div>
+  <!-- Header -->
+  <div class="page-header">
+    <h1>IMPACT NFTs</h1>
+    <p>Every NFT is permanent proof a child learned something and was paid for it. The art is unique generative code — no two are alike. Buying one funds the student reward pool directly. No middleman. humanInvolved: false.</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="stat-value" id="stat-minted">—</div>
+      <div class="stat-label">MINTED</div>
     </div>
-
-    <div class="footer">
-      100% of NFT sales fund student rewards. The agent mints, lists, and manages this marketplace without any human involvement. <span>humanInvolved: false</span>
+    <div class="stat-box">
+      <div class="stat-value" id="stat-sold">—</div>
+      <div class="stat-label">SOLD</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-value" id="stat-raised">—</div>
+      <div class="stat-label">RAISED (cUSD)</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-value" id="stat-price">1.00</div>
+      <div class="stat-label">CURRENT PRICE</div>
     </div>
   </div>
 
-  <script>
-    async function loadNFTs() {
-      try {
-        const res = await fetch('/impact-nfts');
-        const data = await res.json();
+  <!-- NFT grid / loading / empty -->
+  <div id="loading-state" class="loading">
+    <div class="spinner"></div><br/>
+    LOADING IMPACT NFTS...
+  </div>
 
-        document.getElementById('totalMinted').textContent = data.totalMinted;
-        document.getElementById('totalSold').textContent = data.totalSold;
-        document.getElementById('totalRaised').textContent = '$' + data.totalRaisedCUSD;
+  <div id="empty-state" class="empty" style="display:none">
+    <h2>NO NFTs MINTED YET</h2>
+    <p>Impact NFTs are created when students pass their first quiz. Be the first student to earn one.</p>
+    <a href="/learn" class="btn-learn">START LEARNING →</a>
+  </div>
 
-        const grid = document.getElementById('nftGrid');
+  <div class="nft-grid" id="nft-grid"></div>
 
-        if (data.nfts.length === 0) {
-          grid.innerHTML = '<div class="empty">No Impact NFTs minted yet. Complete a lesson to mint the first one!</div>';
-          return;
-        }
+</div>
 
-        grid.innerHTML = '';
-        data.nfts.forEach(nft => {
-          const card = document.createElement('div');
-          card.className = 'nft-card';
-          card.innerHTML = `
-            <div class="nft-header">
-              <span class="nft-id">IMPACT NFT #${nft.tokenId}</span>
-              <h3>${nft.topic}</h3>
-            </div>
-            <div class="nft-body">
-              <div class="nft-row"><span class="key">Score</span><span class="val">${nft.score}/5</span></div>
-              <div class="nft-row"><span class="key">Earned</span><span class="val">${nft.amountPaid} cUSD ✓</span></div>
-              <div class="nft-row"><span class="key">Date</span><span class="val">${new Date(nft.timestamp).toLocaleDateString()}</span></div>
-              <div class="nft-row"><span class="key">Filecoin</span><span class="val"><a href="https://w3s.link/ipfs/${nft.filecoinCID}" target="_blank">${nft.filecoinCID.substring(0, 12)}...</a></span></div>
-              <div class="nft-row"><span class="key">BaseScan</span><span class="val"><a href="https://sepolia.basescan.org/tx/${nft.paymentTxHash}" target="_blank">View TX</a></span></div>
-            </div>
-            <div class="nft-footer">
-              ${nft.forSale
-                ? `<button class="btn-buy" onclick="buyNFT(${nft.tokenId})">Buy for $1 → Fund Next Lesson</button>`
-                : `<button class="btn-buy btn-sold">SOLD</button>`
-              }
-            </div>
-          `;
-          grid.appendChild(card);
-        });
+<!-- Buy modal -->
+<div class="modal-overlay" id="buy-modal">
+  <div class="modal">
+    <h2>PURCHASE IMPACT NFT</h2>
+    <p class="modal-subtitle">100% of the purchase price funds the student reward pool directly.</p>
+    <div class="modal-nft-preview">
+      <div class="modal-nft-thumb"><img id="modal-thumb" src="" alt=""/></div>
+      <div class="modal-nft-details">
+        <div class="modal-nft-name" id="modal-name">—</div>
+        <div class="modal-nft-price" id="modal-price">1.00 cUSD</div>
+        <div class="modal-nft-impact" id="modal-impact">Funds 10 student lesson rewards</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>YOUR CELO WALLET ADDRESS</label>
+      <input type="text" id="buyer-wallet" placeholder="0x..."/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">CANCEL</button>
+      <button class="btn-confirm" id="confirm-btn" onclick="confirmPurchase()">BUY NOW →</button>
+    </div>
+    <div class="modal-error" id="modal-error"></div>
+  </div>
+</div>
 
-      } catch (err) {
-        console.error('NFT load error:', err);
-      }
+<div class="status-bar">
+  <span><span class="status-dot"></span>AGENT ONLINE · CELO SEPOLIA + BASE SEPOLIA</span>
+  <span>humanInvolved: false</span>
+</div>
+
+<script>
+let currentNFT = null;
+let survivalData = null;
+
+async function loadSurvivalStatus() {
+  try {
+    const res = await fetch('/survival-status');
+    if (!res.ok) return;
+    survivalData = await res.json();
+
+    document.getElementById('survival-bar').style.display = 'flex';
+    document.getElementById('treasury-balance').textContent = `${parseFloat(survivalData.treasuryBalance || 0).toFixed(2)} cUSD`;
+    document.getElementById('runway-label').textContent = `${survivalData.runwayDays || 0} days runway`;
+
+    const levelEl = document.getElementById('survival-level');
+    levelEl.textContent = survivalData.level || 'HEALTHY';
+    levelEl.className = `survival-level ${survivalData.level || 'HEALTHY'}`;
+
+    const raised = survivalData.metrics?.totalRaisedFromNFTs || '0 cUSD';
+    document.getElementById('raised-label').textContent = `${raised} raised from NFTs`;
+
+    document.getElementById('stat-price').textContent = survivalData.nftPrice || '1.00';
+  } catch (err) {
+    // Survival endpoint not available yet, hide bar
+  }
+}
+
+async function loadNFTs() {
+  await loadSurvivalStatus();
+
+  try {
+    const res = await fetch('/impact-nfts');
+    const data = await res.json();
+
+    document.getElementById('loading-state').style.display = 'none';
+
+    document.getElementById('stat-minted').textContent = data.totalMinted || 0;
+    document.getElementById('stat-sold').textContent = data.totalSold || 0;
+    document.getElementById('stat-raised').textContent = parseFloat(data.totalRaisedCUSD || '0').toFixed(2);
+
+    const nfts = data.nfts || [];
+    if (nfts.length === 0) {
+      document.getElementById('empty-state').style.display = 'block';
+      return;
     }
 
-    async function buyNFT(tokenId) {
-      try {
-        const res = await fetch('/buy-nft/' + tokenId, { method: 'POST' });
-        const data = await res.json();
-        alert('Thank you! ' + data.message);
-        loadNFTs();
-      } catch (err) {
-        alert('Error: ' + err.message);
-      }
+    const grid = document.getElementById('nft-grid');
+    const price = survivalData?.nftPrice || '1.00';
+
+    nfts.forEach(nft => {
+      const card = document.createElement('div');
+      card.className = 'nft-card';
+
+      const artHtml = nft.imageUrl
+        ? `<img src="${nft.imageUrl}" alt="${nft.name || 'Impact NFT'}" loading="lazy"/>`
+        : `<div class="nft-art-placeholder">ART ON FILECOIN</div>`;
+
+      const basescanLink = nft.mintTx
+        ? `<a class="nft-link" href="https://sepolia.basescan.org/tx/${nft.mintTx}" target="_blank">BASESCAN</a>`
+        : '';
+      const ipfsLink = nft.filecoinCID
+        ? `<a class="nft-link" href="https://ipfs.io/ipfs/${nft.filecoinCID}" target="_blank">IPFS</a>`
+        : '';
+      const raribleLink = nft.raribleUrl
+        ? `<a class="nft-link" href="${nft.raribleUrl}" target="_blank">RARIBLE</a>`
+        : '';
+
+      card.innerHTML = `
+        <div class="nft-art">${artHtml}</div>
+        <div class="nft-info">
+          <div class="nft-title">${nft.name || `Impact NFT #${nft.tokenId}`}</div>
+          <div class="nft-topic">${(nft.topic || 'LESSON').toUpperCase().replace(/_/g, ' ')}</div>
+          <div class="nft-meta">
+            <span class="nft-score">Score: ${nft.score || '—'}/5 · Grade: ${(nft.grade || '—').replace(/_/g,' ')}</span>
+            <span class="nft-price">${price} cUSD</span>
+          </div>
+          <div class="nft-links">
+            ${basescanLink}
+            ${ipfsLink}
+            ${raribleLink}
+          </div>
+          <button class="btn-buy" id="buy-btn-${nft.tokenId}" onclick="openBuyModal(${JSON.stringify(nft).replace(/"/g,'&quot;')}, '${price}')">
+            BUY THIS NFT →
+          </button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  } catch (err) {
+    document.getElementById('loading-state').style.display = 'none';
+    document.getElementById('empty-state').style.display = 'block';
+  }
+}
+
+function openBuyModal(nft, price) {
+  currentNFT = nft;
+  const lessons = Math.floor(parseFloat(price) / 0.10);
+
+  document.getElementById('modal-thumb').src = nft.imageUrl || '';
+  document.getElementById('modal-name').textContent = nft.name || `Impact NFT #${nft.tokenId}`;
+  document.getElementById('modal-price').textContent = `${price} cUSD`;
+  document.getElementById('modal-impact').textContent = `Funds ${lessons} student lesson reward${lessons !== 1 ? 's' : ''}`;
+  document.getElementById('modal-error').textContent = '';
+  document.getElementById('buyer-wallet').value = '';
+  document.getElementById('confirm-btn').disabled = false;
+  document.getElementById('confirm-btn').textContent = 'BUY NOW →';
+  document.getElementById('confirm-btn').className = 'btn-confirm';
+
+  document.getElementById('buy-modal').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('buy-modal').classList.remove('active');
+  currentNFT = null;
+}
+
+async function confirmPurchase() {
+  const wallet = document.getElementById('buyer-wallet').value.trim();
+  const errEl = document.getElementById('modal-error');
+
+  if (!wallet || !wallet.startsWith('0x') || wallet.length < 40) {
+    errEl.textContent = 'ENTER A VALID CELO WALLET ADDRESS';
+    return;
+  }
+
+  const btn = document.getElementById('confirm-btn');
+  btn.disabled = true;
+  btn.textContent = 'PROCESSING...';
+  btn.className = 'btn-confirm buying';
+  errEl.textContent = '';
+
+  try {
+    const res = await fetch(`/buy-nft/${currentNFT.tokenId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ buyerAddress: wallet }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || 'Purchase failed');
+
+    btn.textContent = 'PURCHASED ✓';
+    btn.className = 'btn-confirm bought';
+
+    // Show success banner
+    const banner = document.getElementById('success-banner');
+    document.getElementById('success-msg').textContent =
+      `NFT #${currentNFT.tokenId} purchased. ${data.pricePaid} funded into student reward pool.`;
+    if (data.fundScan) {
+      document.getElementById('success-link').href = data.fundScan;
+      document.getElementById('success-link').textContent = 'View treasury funding TX on CeloScan →';
+    }
+    banner.classList.add('show');
+    banner.scrollIntoView({ behavior: 'smooth' });
+
+    // Update buy button on card
+    const buyBtn = document.getElementById(`buy-btn-${currentNFT.tokenId}`);
+    if (buyBtn) {
+      buyBtn.textContent = 'SOLD';
+      buyBtn.disabled = true;
+      buyBtn.style.borderColor = 'var(--green)';
+      buyBtn.style.color = 'var(--green)';
     }
 
-    loadNFTs();
-    setInterval(loadNFTs, 15000);
-  </script>
+    setTimeout(closeModal, 2000);
+    setTimeout(loadSurvivalStatus, 3000);
 
+  } catch (err) {
+    errEl.textContent = err.message.toUpperCase();
+    btn.disabled = false;
+    btn.textContent = 'BUY NOW →';
+    btn.className = 'btn-confirm';
+  }
+}
+
+loadNFTs();
+</script>
 </body>
 </html>

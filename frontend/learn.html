@@ -1,1188 +1,664 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EduChain — Your Lesson</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --ink:   #08090c;
-      --deep:  #0d1117;
-      --panel: #111620;
-      --card:  #0e1520;
-      --line:  #1e2535;
-      --green: #1db954;
-      --glow:  rgba(29,185,84,0.15);
-      --glowS: rgba(29,185,84,0.06);
-      --gold:  #c9a84c;
-      --goldS: rgba(201,168,76,0.1);
-      --white: #f0ece4;
-      --grey:  #5a6478;
-      --muted: #3a4255;
-    }
-
-    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-    html { scroll-behavior: smooth; }
-
-    body {
-      background: var(--ink);
-      color: var(--white);
-      font-family: 'Outfit', sans-serif;
-      min-height: 100vh;
-    }
-
-    /* ── LAYOUT ── */
-    .app {
-      display: grid;
-      grid-template-columns: 300px 1fr;
-      min-height: 100vh;
-    }
-
-    /* ── SIDEBAR ── */
-    .sidebar {
-      background: var(--deep);
-      border-right: 1px solid var(--line);
-      display: flex;
-      flex-direction: column;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow-y: auto;
-    }
-
-    .sidebar-header {
-      padding: 28px 24px 20px;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .sidebar-logo {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.3em;
-      font-weight: 700;
-      margin-bottom: 16px;
-    }
-    .sidebar-logo span { color: var(--green); }
-
-    .student-info {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 14px 16px;
-    }
-
-    .si-name {
-      font-weight: 600;
-      font-size: 0.88em;
-      margin-bottom: 2px;
-    }
-
-    .si-grade {
-      font-size: 0.72em;
-      color: var(--grey);
-      margin-bottom: 10px;
-    }
-
-    .si-progress {
-      height: 4px;
-      background: var(--line);
-      border-radius: 100px;
-      overflow: hidden;
-      margin-bottom: 4px;
-    }
-
-    .si-bar {
-      height: 100%;
-      background: var(--green);
-      border-radius: 100px;
-      transition: width 0.6s ease;
-    }
-
-    .si-prog-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.62em;
-      color: var(--grey);
-    }
-
-    .si-prog-label span { color: var(--green); }
-
-    /* Path navigation */
-    .path-label {
-      padding: 20px 24px 10px;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.62em;
-      color: var(--grey);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-
-    .path-week {
-      margin-bottom: 4px;
-    }
-
-    .week-header {
-      padding: 8px 24px;
-      font-size: 0.72em;
-      color: var(--grey);
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .week-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--line);
-      flex-shrink: 0;
-    }
-
-    .week-dot.done { background: var(--green); }
-    .week-dot.active {
-      background: var(--green);
-      box-shadow: 0 0 6px var(--green);
-    }
-
-    .lesson-nav-item {
-      padding: 10px 24px 10px 40px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-      transition: background 0.15s;
-      border-left: 2px solid transparent;
-    }
-
-    .lesson-nav-item:hover { background: rgba(255,255,255,0.025); }
-
-    .lesson-nav-item.active {
-      background: var(--glow);
-      border-left-color: var(--green);
-    }
-
-    .lesson-nav-item.locked {
-      opacity: 0.35;
-      cursor: not-allowed;
-    }
-
-    .lni-icon {
-      width: 20px; height: 20px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.6em;
-      flex-shrink: 0;
-    }
-
-    .lni-icon.done { background: var(--green); color: var(--ink); }
-    .lni-icon.active {
-      background: transparent;
-      border: 1.5px solid var(--green);
-      color: var(--green);
-    }
-    .lni-icon.locked {
-      background: var(--line);
-      color: var(--grey);
-    }
-
-    .lni-text {
-      font-size: 0.78em;
-      line-height: 1.3;
-    }
-
-    .lni-earn {
-      margin-left: auto;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.6em;
-      color: var(--green);
-      flex-shrink: 0;
-    }
-
-    .sidebar-footer {
-      margin-top: auto;
-      padding: 20px 24px;
-      border-top: 1px solid var(--line);
-    }
-
-    .treasury-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 4px;
-    }
-
-    .treasury-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.6em;
-      color: var(--grey);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .treasury-val {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.7em;
-      color: var(--green);
-    }
-
-    /* ── MAIN CONTENT ── */
-    .main {
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* SCREENS */
-    .screen { display: none; flex-direction: column; flex: 1; }
-    .screen.active { display: flex; }
-
-    /* ── REGISTER SCREEN ── */
-    .register-screen {
-      justify-content: center;
-      align-items: center;
-      padding: 60px 48px;
-      min-height: 100vh;
-    }
-
-    .register-box {
-      width: 100%;
-      max-width: 480px;
-    }
-
-    .reg-eyebrow {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.68em;
-      color: var(--green);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      margin-bottom: 16px;
-    }
-
-    .reg-title {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 2.4em;
-      font-weight: 700;
-      line-height: 1.1;
-      margin-bottom: 12px;
-    }
-    .reg-title em { font-style: italic; color: var(--green); }
-
-    .reg-sub {
-      font-size: 0.85em;
-      color: var(--grey);
-      line-height: 1.6;
-      margin-bottom: 36px;
-    }
-
-    .field {
-      margin-bottom: 16px;
-    }
-
-    .field label {
-      display: block;
-      font-size: 0.72em;
-      color: var(--grey);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 8px;
-      font-family: 'DM Mono', monospace;
-    }
-
-    .field input, .field select {
-      width: 100%;
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 14px 16px;
-      color: var(--white);
-      font-family: 'Outfit', sans-serif;
-      font-size: 0.9em;
-      outline: none;
-      transition: border-color 0.2s;
-      appearance: none;
-    }
-
-    .field input:focus, .field select:focus {
-      border-color: var(--green);
-    }
-
-    .field select option { background: var(--panel); }
-
-    .reg-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .btn-reg {
-      width: 100%;
-      background: var(--green);
-      color: var(--ink);
-      border: none;
-      border-radius: 100px;
-      padding: 16px;
-      font-family: 'Outfit', sans-serif;
-      font-size: 0.92em;
-      font-weight: 700;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: opacity 0.2s, transform 0.2s;
-    }
-    .btn-reg:hover { opacity: 0.88; transform: translateY(-1px); }
-    .btn-reg:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-    .reg-note {
-      font-size: 0.68em;
-      color: var(--grey);
-      text-align: center;
-      margin-top: 14px;
-      line-height: 1.5;
-    }
-
-    /* ── LESSON SCREEN ── */
-    .lesson-screen {
-      flex-direction: column;
-    }
-
-    .lesson-header {
-      padding: 32px 48px 24px;
-      border-bottom: 1px solid var(--line);
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 24px;
-    }
-
-    .lh-left {}
-
-    .lh-breadcrumb {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.65em;
-      color: var(--grey);
-      letter-spacing: 0.08em;
-      margin-bottom: 8px;
-    }
-
-    .lh-title {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.9em;
-      font-weight: 700;
-      line-height: 1.1;
-    }
-    .lh-title em { font-style: italic; color: var(--green); }
-
-    .lh-right {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-
-    .timer-badge {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.8em;
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 8px 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: border-color 0.3s, color 0.3s;
-    }
-    .timer-badge.ready { border-color: rgba(29,185,84,0.4); color: var(--green); }
-
-    .timer-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--grey);
-      transition: background 0.3s;
-    }
-    .timer-badge.ready .timer-dot { background: var(--green); animation: pulse 1.5s infinite; }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
-    }
-
-    .earn-badge {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.72em;
-      background: var(--glow);
-      border: 1px solid rgba(29,185,84,0.25);
-      color: var(--green);
-      border-radius: 8px;
-      padding: 6px 14px;
-    }
-
-    /* Lesson content */
-    .lesson-content {
-      padding: 40px 48px;
-      max-width: 760px;
-      line-height: 1.85;
-    }
-
-    .lesson-body {
-      font-size: 0.95em;
-      color: rgba(240,236,228,0.85);
-      font-weight: 300;
-      white-space: pre-wrap;
-    }
-
-    .lesson-body h2, .lesson-body h3 {
-      font-family: 'Cormorant Garamond', serif;
-      font-weight: 700;
-      color: var(--white);
-      margin: 28px 0 12px;
-    }
-
-    /* ── QUIZ SCREEN ── */
-    .quiz-screen {
-      flex-direction: column;
-    }
-
-    .quiz-header {
-      padding: 32px 48px 24px;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .qh-eyebrow {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.65em;
-      color: var(--green);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-
-    .qh-title {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.7em;
-      font-weight: 700;
-    }
-    .qh-title em { font-style: italic; color: var(--green); }
-
-    .quiz-body {
-      padding: 40px 48px;
-      max-width: 720px;
-      display: flex;
-      flex-direction: column;
-      gap: 32px;
-    }
-
-    .question-block {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .q-num {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.62em;
-      color: var(--grey);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-
-    .q-text {
-      font-size: 0.95em;
-      font-weight: 500;
-      line-height: 1.5;
-    }
-
-    .q-options {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .q-option {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px 18px;
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
-    }
-
-    .q-option:hover { border-color: rgba(29,185,84,0.3); background: var(--glow); }
-
-    .q-option.selected {
-      border-color: var(--green);
-      background: var(--glow);
-    }
-
-    .q-option input[type="radio"] { display: none; }
-
-    .q-radio {
-      width: 18px; height: 18px;
-      border-radius: 50%;
-      border: 1.5px solid var(--line);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      transition: border-color 0.15s;
-    }
-
-    .q-option.selected .q-radio {
-      border-color: var(--green);
-      background: var(--green);
-    }
-
-    .q-option.selected .q-radio::after {
-      content: '';
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--ink);
-    }
-
-    .q-label { font-size: 0.88em; line-height: 1.4; }
-
-    .quiz-footer {
-      padding: 24px 48px;
-      border-top: 1px solid var(--line);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .quiz-progress {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.7em;
-      color: var(--grey);
-    }
-    .quiz-progress span { color: var(--green); }
-
-    .btn-submit {
-      background: var(--green);
-      color: var(--ink);
-      border: none;
-      border-radius: 100px;
-      padding: 14px 36px;
-      font-family: 'Outfit', sans-serif;
-      font-size: 0.88em;
-      font-weight: 700;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.2s;
-    }
-    .btn-submit:hover { opacity: 0.88; transform: translateY(-1px); }
-    .btn-submit:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
-
-    /* ── RESULT SCREEN ── */
-    .result-screen {
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 60px 48px;
-    }
-
-    .result-box {
-      width: 100%;
-      max-width: 540px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .result-icon {
-      font-size: 4em;
-      line-height: 1;
-    }
-
-    .result-title {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 2.4em;
-      font-weight: 700;
-      line-height: 1.1;
-    }
-    .result-title em { font-style: italic; }
-    .result-title.pass em { color: var(--green); }
-    .result-title.fail em { color: var(--gold); }
-
-    .result-score {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.82em;
-      color: var(--grey);
-    }
-
-    .result-payment {
-      background: var(--glow);
-      border: 1px solid rgba(29,185,84,0.3);
-      border-radius: 14px;
-      padding: 24px 32px;
-      width: 100%;
-    }
-
-    .rp-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.65em;
-      color: var(--grey);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-bottom: 6px;
-    }
-
-    .rp-amount {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 2.2em;
-      font-weight: 700;
-      color: var(--green);
-      line-height: 1;
-      margin-bottom: 8px;
-    }
-
-    .rp-tx {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.62em;
-      color: var(--grey);
-      word-break: break-all;
-    }
-
-    .rp-tx a { color: var(--green); text-decoration: none; }
-
-    .result-nft {
-      background: var(--goldS);
-      border: 1px solid rgba(201,168,76,0.2);
-      border-radius: 14px;
-      padding: 16px 24px;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .rn-icon { font-size: 1.4em; }
-    .rn-text { text-align: left; }
-    .rn-title { font-size: 0.82em; font-weight: 600; margin-bottom: 2px; }
-    .rn-sub { font-size: 0.7em; color: var(--grey); }
-
-    .result-message {
-      font-size: 0.88em;
-      color: var(--grey);
-      line-height: 1.6;
-      max-width: 400px;
-    }
-
-    .result-next {
-      background: var(--green);
-      color: var(--ink);
-      border: none;
-      border-radius: 100px;
-      padding: 14px 36px;
-      font-family: 'Outfit', sans-serif;
-      font-size: 0.9em;
-      font-weight: 700;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-    .result-next:hover { opacity: 0.85; }
-
-    /* Status messages */
-    .status-msg {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.72em;
-      padding: 10px 16px;
-      border-radius: 8px;
-      margin-top: 8px;
-    }
-    .status-msg.info { background: var(--glowS); color: var(--green); border: 1px solid rgba(29,185,84,0.2); }
-    .status-msg.error { background: rgba(255,80,80,0.06); color: #ff6b6b; border: 1px solid rgba(255,80,80,0.2); }
-
-    /* Scroll area */
-    .lesson-scroll {
-      flex: 1;
-      overflow-y: auto;
-    }
-    .quiz-scroll {
-      flex: 1;
-      overflow-y: auto;
-    }
-
-    /* ── LOADING STATE ── */
-    .loading-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      gap: 16px;
-    }
-
-    .loading-spinner {
-      width: 40px; height: 40px;
-      border: 2px solid var(--line);
-      border-top-color: var(--green);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .loading-text {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.72em;
-      color: var(--grey);
-    }
-
-    /* Lesson action bar */
-    .lesson-action {
-      padding: 24px 48px;
-      border-top: 1px solid var(--line);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: var(--deep);
-    }
-
-    .la-note {
-      font-size: 0.78em;
-      color: var(--grey);
-      max-width: 300px;
-      line-height: 1.5;
-    }
-
-    .btn-take-quiz {
-      background: var(--green);
-      color: var(--ink);
-      border: none;
-      border-radius: 100px;
-      padding: 14px 36px;
-      font-family: 'Outfit', sans-serif;
-      font-size: 0.92em;
-      font-weight: 700;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.2s;
-    }
-    .btn-take-quiz:hover { opacity: 0.88; transform: translateY(-1px); }
-    .btn-take-quiz:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
-
-    /* Mobile */
-    @media (max-width: 768px) {
-      .app { grid-template-columns: 1fr; }
-      .sidebar { display: none; }
-      .lesson-header, .lesson-content, .lesson-action,
-      .quiz-header, .quiz-body, .quiz-footer,
-      .register-screen, .result-screen { padding-left: 24px; padding-right: 24px; }
-    }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EduChain — Learn & Earn</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --border: rgba(255,255,255,0.07);
+    --text: #e8e8f0;
+    --muted: #888899;
+    --green: #00e5a0;
+    --purple: #9b59f5;
+    --blue: #4fa3ff;
+    --gold: #f5c842;
+    --red: #ff4757;
+    --celo: #35d07f;
+    --base: #4fa3ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Courier New', monospace;
+    min-height: 100vh;
+  }
+
+  /* ── Nav ── */
+  nav {
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo { font-size: 13px; color: var(--green); letter-spacing: 3px; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: 12px; margin-left: 24px; letter-spacing: 1px; }
+  .nav-links a:hover { color: var(--text); }
+
+  /* ── Layout ── */
+  .container { max-width: 900px; margin: 0 auto; padding: 48px 24px; }
+
+  /* ── Register form ── */
+  #register-view h1 { font-size: 28px; font-weight: normal; letter-spacing: 2px; margin-bottom: 8px; }
+  #register-view p { color: var(--muted); font-size: 13px; margin-bottom: 40px; line-height: 1.6; }
+  .form-group { margin-bottom: 20px; }
+  .form-group label { display: block; font-size: 11px; color: var(--muted); letter-spacing: 2px; margin-bottom: 8px; }
+  .form-group input, .form-group select {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 16px;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: var(--green); }
+  .form-group select option { background: var(--surface); }
+  .btn-primary {
+    background: transparent;
+    border: 1px solid var(--green);
+    color: var(--green);
+    padding: 14px 32px;
+    font-family: inherit;
+    font-size: 13px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    margin-top: 8px;
+  }
+  .btn-primary:hover { background: var(--green); color: #000; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── Lesson view ── */
+  #lesson-view { display: none; }
+  .lesson-header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 24px;
+    margin-bottom: 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .lesson-topic { font-size: 11px; color: var(--green); letter-spacing: 3px; margin-bottom: 8px; }
+  .lesson-title { font-size: 22px; font-weight: normal; letter-spacing: 1px; }
+  .timer-block { text-align: right; }
+  .timer-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; margin-bottom: 4px; }
+  #timer { font-size: 32px; color: var(--gold); font-weight: bold; letter-spacing: 3px; }
+  .lesson-body {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 32px;
+    line-height: 1.8;
+    font-size: 15px;
+    color: #c8c8d8;
+    margin-bottom: 32px;
+    white-space: pre-wrap;
+  }
+
+  /* ── Quiz ── */
+  #quiz-section { display: none; }
+  .quiz-title { font-size: 11px; color: var(--purple); letter-spacing: 3px; margin-bottom: 24px; }
+  .question-block { margin-bottom: 28px; }
+  .question-text { font-size: 14px; margin-bottom: 14px; color: var(--text); line-height: 1.6; }
+  .option-label {
+    display: block;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .option-label:hover { border-color: var(--purple); color: var(--text); }
+  .option-label input { margin-right: 10px; accent-color: var(--purple); }
+  .option-label.selected { border-color: var(--purple); color: var(--text); background: rgba(155,89,245,0.06); }
+  .btn-submit {
+    background: transparent;
+    border: 1px solid var(--purple);
+    color: var(--purple);
+    padding: 14px 32px;
+    font-family: inherit;
+    font-size: 13px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    margin-top: 16px;
+  }
+  .btn-submit:hover { background: var(--purple); color: #fff; }
+  .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── Processing ── */
+  #processing-view { display: none; text-align: center; padding: 80px 0; }
+  .processing-steps { text-align: left; max-width: 400px; margin: 40px auto; }
+  .step-line {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 0;
+    font-size: 13px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    transition: color 0.3s;
+  }
+  .step-line.active { color: var(--text); }
+  .step-line.done { color: var(--green); }
+  .step-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .step-line.active .step-dot { background: var(--gold); animation: pulse 1s infinite; }
+  .step-line.done .step-dot { background: var(--green); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ── Result view ── */
+  #result-view { display: none; }
+  .result-hero {
+    text-align: center;
+    padding: 40px 0 48px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+  .result-label { font-size: 11px; color: var(--green); letter-spacing: 4px; margin-bottom: 16px; }
+  .result-score { font-size: 72px; color: var(--green); font-weight: bold; line-height: 1; margin-bottom: 8px; }
+  .result-msg { font-size: 14px; color: var(--muted); line-height: 1.6; max-width: 500px; margin: 0 auto; }
+
+  /* ── Proof cards ── */
+  .proof-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 600px) { .proof-grid { grid-template-columns: 1fr; } }
+  .proof-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px;
+    transition: border-color 0.2s;
+  }
+  .proof-card:hover { border-color: rgba(255,255,255,0.15); }
+  .proof-card-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .proof-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .proof-dot.celo { background: var(--celo); }
+  .proof-dot.base { background: var(--base); }
+  .proof-dot.ipfs { background: var(--gold); }
+  .proof-dot.nft { background: var(--purple); }
+
+  .proof-value {
+    font-size: 12px;
+    color: var(--text);
+    word-break: break-all;
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+  .proof-links { display: flex; flex-wrap: wrap; gap: 8px; }
+  .proof-link {
+    font-size: 11px;
+    color: var(--muted);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    padding: 5px 10px;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+  }
+  .proof-link:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+  .proof-link.primary { border-color: var(--green); color: var(--green); }
+  .proof-link.primary:hover { background: var(--green); color: #000; }
+
+  /* ── NFT preview ── */
+  .nft-preview {
+    border: 1px solid var(--border);
+    margin-bottom: 32px;
+    background: var(--surface);
+  }
+  .nft-preview-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--purple);
+    letter-spacing: 2px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .nft-preview-body { padding: 20px; }
+  #nft-img-container {
+    width: 100%;
+    max-width: 360px;
+    margin: 0 auto;
+    display: block;
+  }
+  #nft-img-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .nft-name { font-size: 16px; color: var(--text); margin: 16px 0 6px; text-align: center; }
+  .nft-theme { font-size: 12px; color: var(--muted); text-align: center; }
+
+  /* ── Fail state ── */
+  #fail-view { display: none; text-align: center; padding: 60px 0; }
+  .fail-score { font-size: 64px; color: var(--red); font-weight: bold; }
+  .fail-msg { color: var(--muted); font-size: 14px; margin: 16px 0 32px; }
+  .btn-retry {
+    background: transparent;
+    border: 1px solid var(--red);
+    color: var(--red);
+    padding: 12px 28px;
+    font-family: inherit;
+    font-size: 12px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-retry:hover { background: var(--red); color: #fff; }
+
+  /* ── Loading ── */
+  .loading { text-align: center; padding: 40px; color: var(--muted); font-size: 13px; letter-spacing: 2px; }
+  .spinner {
+    display: inline-block;
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--green);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Status bar ── */
+  .status-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 10px 32px;
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    letter-spacing: 1px;
+  }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: inline-block; margin-right: 6px; }
+</style>
 </head>
 <body>
-<div class="app">
 
-  <!-- SIDEBAR — Journey Map -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-      <a href="/" style="text-decoration:none">
-        <div class="sidebar-logo">Edu<span>Chain</span></div>
-      </a>
-      <div class="student-info" id="studentInfo" style="display:none">
-        <div class="si-name" id="siName">—</div>
-        <div class="si-grade" id="siGrade">—</div>
-        <div class="si-progress">
-          <div class="si-bar" id="siBar" style="width:0%"></div>
+<nav>
+  <div class="logo">EDUCHAIN</div>
+  <div class="nav-links">
+    <a href="/">HOME</a>
+    <a href="/agent.html">AGENT</a>
+    <a href="/impact.html">IMPACT</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- ── Register ── -->
+  <div id="register-view">
+    <h1>START LEARNING</h1>
+    <p>The agent assigns your lesson. Pass the quiz. Earn cUSD.<br/>Every proof is on-chain. humanInvolved: false.</p>
+    <div class="form-group">
+      <label>YOUR NAME</label>
+      <input type="text" id="name" placeholder="Enter your name"/>
+    </div>
+    <div class="form-group">
+      <label>EMAIL ADDRESS</label>
+      <input type="email" id="email" placeholder="your@email.com"/>
+    </div>
+    <div class="form-group">
+      <label>YOUR AGE</label>
+      <input type="number" id="age" placeholder="e.g. 12" min="5" max="25"/>
+    </div>
+    <div class="form-group">
+      <label>GRADE LEVEL</label>
+      <select id="grade">
+        <option value="">— select —</option>
+        <option value="primary_1">Primary 1 (Grade 1)</option>
+        <option value="primary_2">Primary 2 (Grade 2)</option>
+        <option value="primary_3">Primary 3 (Grade 3)</option>
+        <option value="primary_4">Primary 4 (Grade 4)</option>
+        <option value="primary_5">Primary 5 (Grade 5)</option>
+        <option value="primary_6">Primary 6 (Grade 6)</option>
+        <option value="jss_1">JSS 1 (Grade 7)</option>
+        <option value="jss_2">JSS 2 (Grade 8)</option>
+        <option value="jss_3">JSS 3 (Grade 9)</option>
+        <option value="sss_1">SSS 1 (Grade 10)</option>
+        <option value="sss_2">SSS 2 (Grade 11)</option>
+        <option value="sss_3">SSS 3 (Grade 12)</option>
+      </select>
+    </div>
+    <button class="btn-primary" onclick="startLesson()">BEGIN SESSION →</button>
+    <div id="register-error" style="color:var(--red);font-size:12px;margin-top:12px;letter-spacing:1px;"></div>
+  </div>
+
+  <!-- ── Loading lesson ── -->
+  <div id="loading-view" style="display:none;">
+    <div class="loading">
+      <div class="spinner"></div><br/>
+      AGENT PREPARING YOUR LESSON...
+    </div>
+  </div>
+
+  <!-- ── Lesson ── -->
+  <div id="lesson-view">
+    <div class="lesson-header">
+      <div>
+        <div class="lesson-topic" id="lesson-topic-label">LOADING...</div>
+        <div class="lesson-title" id="lesson-title">—</div>
+      </div>
+      <div class="timer-block">
+        <div class="timer-label">READ TIME</div>
+        <div id="timer">3:00</div>
+      </div>
+    </div>
+    <div class="lesson-body" id="lesson-body">Loading lesson content...</div>
+    <button class="btn-primary" id="quiz-btn" onclick="showQuiz()" disabled>
+      TAKE QUIZ →
+    </button>
+  </div>
+
+  <!-- ── Quiz ── -->
+  <div id="quiz-section">
+    <div class="quiz-title">KNOWLEDGE CHECK</div>
+    <div id="quiz-questions"></div>
+    <button class="btn-submit" id="submit-btn" onclick="submitQuiz()">
+      SUBMIT ANSWERS →
+    </button>
+  </div>
+
+  <!-- ── Processing ── -->
+  <div id="processing-view">
+    <div class="loading">
+      <div class="spinner"></div><br/>
+      AGENT PROCESSING RESULT
+    </div>
+    <div class="processing-steps">
+      <div class="step-line" id="step-grade">
+        <div class="step-dot"></div>
+        <span>Grading quiz answers...</span>
+      </div>
+      <div class="step-line" id="step-store">
+        <div class="step-dot"></div>
+        <span>Archiving proof to Filecoin...</span>
+      </div>
+      <div class="step-line" id="step-pay">
+        <div class="step-dot"></div>
+        <span>Sending cUSD to your wallet...</span>
+      </div>
+      <div class="step-line" id="step-nft">
+        <div class="step-dot"></div>
+        <span>Minting impact NFT on Base...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Result (pass) ── -->
+  <div id="result-view">
+    <div class="result-hero">
+      <div class="result-label">LESSON COMPLETE</div>
+      <div class="result-score" id="result-score">100%</div>
+      <div class="result-msg" id="result-msg">—</div>
+    </div>
+
+    <!-- NFT Preview -->
+    <div class="nft-preview" id="nft-preview-card" style="display:none;">
+      <div class="nft-preview-header">
+        <span>IMPACT NFT MINTED</span>
+        <span id="nft-rarible-badge" style="color:var(--muted);"></span>
+      </div>
+      <div class="nft-preview-body">
+        <div id="nft-img-container">
+          <img id="nft-art-img" src="" alt="Impact NFT Art"/>
         </div>
-        <div class="si-prog-label"><span id="siDone">0</span> of <span id="siTotal">10</span> lessons complete</div>
+        <div class="nft-name" id="nft-name-label">—</div>
+        <div class="nft-theme" id="nft-theme-label">—</div>
       </div>
     </div>
 
-    <div class="path-label">Your learning path</div>
+    <!-- Proof grid -->
+    <div class="proof-grid">
 
-    <div id="pathNav">
-      <!-- Week 1 -->
-      <div class="path-week">
-        <div class="week-header">
-          <div class="week-dot active" id="w1dot"></div>
-          Week 1 · Foundations
+      <!-- Payment -->
+      <div class="proof-card" id="payment-card" style="display:none;">
+        <div class="proof-card-label">
+          <span class="proof-dot celo"></span>
+          <span style="color:var(--celo)">CELO PAYMENT</span>
         </div>
-        <div class="lesson-nav-item active" data-lesson="1">
-          <div class="lni-icon active">▶</div>
-          <div class="lni-text">Today's Lesson</div>
-          <div class="lni-earn">+0.50</div>
-        </div>
-        <div class="lesson-nav-item locked" data-lesson="2">
-          <div class="lni-icon locked">🔒</div>
-          <div class="lni-text">Day 2</div>
-        </div>
-        <div class="lesson-nav-item locked" data-lesson="3">
-          <div class="lni-icon locked">🔒</div>
-          <div class="lni-text">Day 3</div>
+        <div class="proof-value" id="payment-hash">—</div>
+        <div class="proof-links">
+          <a class="proof-link primary" id="celoscan-link" href="#" target="_blank">CELOSCAN →</a>
+          <span style="font-size:12px;color:var(--green);align-self:center;" id="payment-amount"></span>
         </div>
       </div>
-      <!-- Week 2 -->
-      <div class="path-week">
-        <div class="week-header">
-          <div class="week-dot"></div>
-          Week 2 · Building
+
+      <!-- NFT on-chain -->
+      <div class="proof-card" id="nft-card" style="display:none;">
+        <div class="proof-card-label">
+          <span class="proof-dot base"></span>
+          <span style="color:var(--base)">BASE NFT MINT</span>
         </div>
-        <div class="lesson-nav-item locked" data-lesson="4">
-          <div class="lni-icon locked">🔒</div>
-          <div class="lni-text">Day 4</div>
-        </div>
-        <div class="lesson-nav-item locked" data-lesson="5">
-          <div class="lni-icon locked">🔒</div>
-          <div class="lni-text">Day 5</div>
-        </div>
-        <div class="lesson-nav-item locked" data-lesson="6">
-          <div class="lni-icon locked">🔒</div>
-          <div class="lni-text">Day 6</div>
+        <div class="proof-value" id="nft-hash">—</div>
+        <div class="proof-links">
+          <a class="proof-link" id="basescan-link" href="#" target="_blank">BASESCAN</a>
+          <a class="proof-link" id="rarible-link" href="#" target="_blank" style="display:none">RARIBLE</a>
+          <a class="proof-link" id="opensea-link" href="#" target="_blank" style="display:none">OPENSEA</a>
         </div>
       </div>
+
+      <!-- Filecoin art -->
+      <div class="proof-card" id="filecoin-card" style="display:none;">
+        <div class="proof-card-label">
+          <span class="proof-dot ipfs"></span>
+          <span style="color:var(--gold)">FILECOIN STORAGE</span>
+        </div>
+        <div class="proof-value" id="filecoin-cid">—</div>
+        <div class="proof-links">
+          <a class="proof-link" id="ipfs-link" href="#" target="_blank">VIEW ON IPFS</a>
+          <a class="proof-link" id="meta-link" href="#" target="_blank">METADATA</a>
+        </div>
+      </div>
+
+      <!-- Agent log -->
+      <div class="proof-card">
+        <div class="proof-card-label">
+          <span class="proof-dot" style="background:var(--purple)"></span>
+          <span style="color:var(--purple)">AGENT LOG</span>
+        </div>
+        <div class="proof-value">
+          humanInvolved: <span style="color:var(--green)">false</span><br/>
+          network: celo-sepolia + base-sepolia<br/>
+          ai: venice / llama-3.3-70b
+        </div>
+        <div class="proof-links">
+          <a class="proof-link" href="/agent.html" target="_blank">AGENT ROOM</a>
+        </div>
+      </div>
+
     </div>
 
-    <div class="sidebar-footer">
-      <div class="treasury-row">
-        <span class="treasury-label">Agent treasury</span>
-        <span class="treasury-val" id="treasury">—</span>
-      </div>
-      <div class="treasury-row">
-        <span class="treasury-label">Your earned</span>
-        <span class="treasury-val" id="earned">0 cUSD</span>
-      </div>
-    </div>
-  </aside>
+    <button class="btn-primary" onclick="resetLesson()">LEARN ANOTHER LESSON →</button>
+  </div>
 
-  <!-- MAIN -->
-  <main class="main">
+  <!-- ── Fail ── -->
+  <div id="fail-view">
+    <div class="fail-score" id="fail-score">—%</div>
+    <div class="fail-msg">You need 70% to earn. Read again carefully.</div>
+    <button class="btn-retry" onclick="retryQuiz()">RETRY QUIZ →</button>
+  </div>
 
-    <!-- REGISTER -->
-    <div class="screen active" id="screenRegister">
-      <div class="register-screen">
-        <div class="register-box">
-          <div class="reg-eyebrow">Start your journey</div>
-          <h1 class="reg-title">
-            Your first lesson<br>
-            is <em>waiting for you.</em>
-          </h1>
-          <p class="reg-sub">
-            Tell us a little about yourself. The agent will build your personal curriculum path — structured lessons matched to your age and grade, assigned one day at a time.
-          </p>
+</div>
 
-          <div class="field">
-            <label>Your name</label>
-            <input type="text" id="regName" placeholder="First name" autocomplete="off">
-          </div>
-
-          <div class="reg-row">
-            <div class="field">
-              <label>Age</label>
-              <select id="regAge">
-                <option value="">Select age</option>
-                <option value="7">7 years old</option>
-                <option value="8">8 years old</option>
-                <option value="9">9 years old</option>
-                <option value="10">10 years old</option>
-                <option value="11">11 years old</option>
-                <option value="12">12 years old</option>
-                <option value="13">13 years old</option>
-                <option value="14">14 years old</option>
-                <option value="15">15 years old</option>
-                <option value="16">16 years old</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Grade level</label>
-              <select id="regGrade">
-                <option value="">Select grade</option>
-                <option value="primary_1">Primary 1</option>
-                <option value="primary_2">Primary 2</option>
-                <option value="primary_3">Primary 3</option>
-                <option value="primary_4">Primary 4</option>
-                <option value="primary_5">Primary 5</option>
-                <option value="primary_6">Primary 6</option>
-                <option value="jss_1">JSS 1</option>
-                <option value="jss_2">JSS 2</option>
-                <option value="jss_3">JSS 3</option>
-                <option value="sss_1">SSS 1</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Email or phone (for your wallet)</label>
-            <input type="text" id="regEmail" placeholder="you@example.com or +234..." autocomplete="off">
-          </div>
-
-          <button class="btn-reg" id="btnRegister" onclick="register()">
-            Begin My Learning Path →
-          </button>
-
-          <div id="regStatus"></div>
-
-          <p class="reg-note">
-            Your wallet is created automatically. You don't need any crypto knowledge.<br>
-            cUSD earned goes straight to your wallet the moment you pass.
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- LOADING -->
-    <div class="screen" id="screenLoading">
-      <div class="loading-state">
-        <div class="loading-spinner"></div>
-        <div class="loading-text" id="loadingText">Assigning your lesson...</div>
-      </div>
-    </div>
-
-    <!-- LESSON -->
-    <div class="screen" id="screenLesson">
-      <div class="lesson-header">
-        <div class="lh-left">
-          <div class="lh-breadcrumb" id="lessonBreadcrumb">Week 1 · Day 1 · Foundations</div>
-          <h1 class="lh-title" id="lessonTitle">Today's <em>Lesson</em></h1>
-        </div>
-        <div class="lh-right">
-          <div class="timer-badge" id="timerBadge">
-            <div class="timer-dot" id="timerDot"></div>
-            <span id="timerText">Read for 3 min before quiz</span>
-          </div>
-          <div class="earn-badge">+0.50 cUSD on pass</div>
-        </div>
-      </div>
-
-      <div class="lesson-scroll">
-        <div class="lesson-content">
-          <div class="lesson-body" id="lessonBody">Loading your lesson...</div>
-        </div>
-      </div>
-
-      <div class="lesson-action">
-        <p class="la-note">Read carefully. The quiz tests what you just learned — not what you already knew.</p>
-        <button class="btn-take-quiz" id="btnQuiz" onclick="showQuiz()" disabled>
-          Take the Quiz →
-        </button>
-      </div>
-    </div>
-
-    <!-- QUIZ -->
-    <div class="screen" id="screenQuiz">
-      <div class="quiz-header">
-        <div class="qh-eyebrow">Prove what you learned</div>
-        <h2 class="qh-title">5 questions. Score 4 or 5 to <em>earn.</em></h2>
-      </div>
-
-      <div class="quiz-scroll">
-        <div class="quiz-body" id="quizBody">
-          <!-- Questions injected here -->
-        </div>
-      </div>
-
-      <div class="quiz-footer">
-        <div class="quiz-progress">
-          <span id="answeredCount">0</span> / 5 answered
-        </div>
-        <button class="btn-submit" id="btnSubmit" onclick="submitQuiz()" disabled>
-          Submit Answers →
-        </button>
-      </div>
-    </div>
-
-    <!-- RESULT -->
-    <div class="screen" id="screenResult">
-      <div class="result-screen">
-        <div class="result-box" id="resultBox">
-          <!-- Injected -->
-        </div>
-      </div>
-    </div>
-
-  </main>
+<!-- Status bar -->
+<div class="status-bar">
+  <span><span class="status-dot"></span>AGENT ONLINE · CELO SEPOLIA + BASE SEPOLIA</span>
+  <span>humanInvolved: false</span>
 </div>
 
 <script>
-  // ── STATE ──
-  const state = {
+  let state = {
     student: null,
     lesson: null,
-    quizStartTime: null,
-    answers: {},
-    totalEarned: 0
+    quiz: null,
+    timerInterval: null,
+    secondsLeft: 180,
   };
 
-  // ── SCREENS ──
-  function showScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById('screen' + id).classList.add('active');
+  function show(id) {
+    ['register-view','loading-view','lesson-view','quiz-section','processing-view','result-view','fail-view']
+      .forEach(v => {
+        const el = document.getElementById(v);
+        if (el) el.style.display = v === id ? 'block' : 'none';
+      });
   }
 
-  // ── REGISTER ──
-  async function register() {
-    const name  = document.getElementById('regName').value.trim();
-    const age   = document.getElementById('regAge').value;
-    const grade = document.getElementById('regGrade').value;
-    const email = document.getElementById('regEmail').value.trim();
+  async function startLesson() {
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const age = parseInt(document.getElementById('age').value);
+    const grade = document.getElementById('grade').value;
+    const errEl = document.getElementById('register-error');
 
-    if (!name || !age || !grade || !email) {
-      showStatus('regStatus', 'Please fill in all fields.', 'error');
+    if (!name || !email || !age || !grade) {
+      errEl.textContent = 'ALL FIELDS REQUIRED';
       return;
     }
-
-    const btn = document.getElementById('btnRegister');
-    btn.disabled = true;
-    btn.textContent = 'Registering...';
-
-    try {
-      const res = await fetch('/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, age: parseInt(age), grade, email })
-      });
-
-      const d = await res.json();
-      if (!d.success) throw new Error(d.error || 'Registration failed');
-
-      state.student = { name, age, grade, email, wallet: d.wallet };
-      updateSidebar();
-      loadLesson();
-
-    } catch (err) {
-      showStatus('regStatus', err.message, 'error');
-      btn.disabled = false;
-      btn.textContent = 'Begin My Learning Path →';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errEl.textContent = 'INVALID EMAIL';
+      return;
     }
-  }
+    errEl.textContent = '';
 
-  // ── LOAD LESSON ──
-  async function loadLesson() {
-    showScreen('Loading');
-    setLoading('Building your lesson for today...');
+    state.student = { name, email, age, grade };
+    show('loading-view');
 
     try {
       const res = await fetch('/lesson', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: state.student.email,
-          age: state.student.age,
-          grade: state.student.grade
-        })
+        body: JSON.stringify({ email, age, grade }),
       });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load lesson');
 
-      const d = await res.json();
-      if (!d.success) throw new Error(d.error || 'Failed to load lesson');
-
-      state.lesson = d;
-
-      // Set lesson UI
-      const gradeFmt = state.student.grade.replace('_', ' ').toUpperCase();
-      document.getElementById('lessonBreadcrumb').textContent =
-        `${gradeFmt} · ${d.subject || 'General Studies'} · Day ${d.lessonNumber || 1}`;
-
-      document.getElementById('lessonTitle').innerHTML =
-        `${d.topic || 'Today\'s'} <em>Lesson</em>`;
-
-      document.getElementById('lessonBody').textContent = d.content || d.lesson;
-
-      // Start reading timer — must read for 3 min before quiz unlocks
-      startReadTimer();
-      showScreen('Lesson');
-
+      state.lesson = data;
+      renderLesson(data);
     } catch (err) {
-      setLoading('Error: ' + err.message);
+      show('register-view');
+      document.getElementById('register-error').textContent = err.message.toUpperCase();
     }
   }
 
-  // ── READING TIMER ──
-  let readTimerInterval;
-  let readSeconds = 0;
-  const READ_REQUIRED = 180; // 3 minutes
+  function renderLesson(data) {
+    document.getElementById('lesson-topic-label').textContent = (data.topic || 'LESSON').toUpperCase().replace(/_/g, ' ');
+    document.getElementById('lesson-title').textContent = data.title || data.topic || 'Today\'s Lesson';
+    document.getElementById('lesson-body').textContent = data.lesson || data.content || '';
+    show('lesson-view');
+    startTimer();
+  }
 
-  function startReadTimer() {
-    readSeconds = 0;
-    const badge  = document.getElementById('timerBadge');
-    const dot    = document.getElementById('timerDot');
-    const text   = document.getElementById('timerText');
-    const btn    = document.getElementById('btnQuiz');
+  function startTimer() {
+    state.secondsLeft = 180;
+    const quizBtn = document.getElementById('quiz-btn');
+    quizBtn.disabled = true;
 
-    state.quizStartTime = new Date().toISOString();
+    state.timerInterval = setInterval(() => {
+      state.secondsLeft--;
+      const m = Math.floor(state.secondsLeft / 60);
+      const s = state.secondsLeft % 60;
+      document.getElementById('timer').textContent = `${m}:${s.toString().padStart(2, '0')}`;
 
-    readTimerInterval = setInterval(() => {
-      readSeconds++;
-      const remaining = READ_REQUIRED - readSeconds;
-
-      if (remaining > 0) {
-        const mins = Math.floor(remaining / 60);
-        const secs = remaining % 60;
-        text.textContent = `Quiz unlocks in ${mins}:${secs.toString().padStart(2,'0')}`;
-      } else {
-        clearInterval(readTimerInterval);
-        badge.classList.add('ready');
-        text.textContent = 'Quiz ready — good luck';
-        btn.disabled = false;
+      if (state.secondsLeft <= 0) {
+        clearInterval(state.timerInterval);
+        document.getElementById('timer').textContent = 'READY';
+        document.getElementById('timer').style.color = 'var(--green)';
+        quizBtn.disabled = false;
+        quizBtn.textContent = 'TAKE QUIZ →';
       }
     }, 1000);
   }
 
-  // ── SHOW QUIZ ──
   function showQuiz() {
-    if (!state.lesson?.questions?.length) {
-      alert('Quiz not ready yet.');
+    if (!state.lesson || !state.lesson.quiz) return;
+    state.quiz = state.lesson.quiz;
+    renderQuiz(state.quiz);
+    show('quiz-section');
+    // keep lesson visible above quiz
+    document.getElementById('lesson-view').style.display = 'block';
+    document.getElementById('quiz-section').style.display = 'block';
+    document.getElementById('register-view').style.display = 'none';
+  }
+
+  function renderQuiz(quiz) {
+    const container = document.getElementById('quiz-questions');
+    container.innerHTML = '';
+    const questions = Array.isArray(quiz) ? quiz : (quiz.questions || []);
+
+    questions.forEach((q, qi) => {
+      const block = document.createElement('div');
+      block.className = 'question-block';
+      block.innerHTML = `<div class="question-text">${qi + 1}. ${q.question || q.text}</div>`;
+
+      const opts = q.options || q.choices || [];
+      opts.forEach((opt, oi) => {
+        const label = document.createElement('label');
+        label.className = 'option-label';
+        label.innerHTML = `<input type="radio" name="q${qi}" value="${oi}"/> ${opt}`;
+        label.addEventListener('click', () => {
+          block.querySelectorAll('.option-label').forEach(l => l.classList.remove('selected'));
+          label.classList.add('selected');
+        });
+        block.appendChild(label);
+      });
+
+      container.appendChild(block);
+    });
+  }
+
+  async function submitQuiz() {
+    const questions = Array.isArray(state.quiz) ? state.quiz : (state.quiz?.questions || []);
+    const answers = questions.map((_, qi) => {
+      const checked = document.querySelector(`input[name="q${qi}"]:checked`);
+      return checked ? parseInt(checked.value) : -1;
+    });
+
+    if (answers.includes(-1)) {
+      alert('Please answer all questions.');
       return;
     }
 
-    state.answers = {};
-    updateAnswerCount();
+    document.getElementById('submit-btn').disabled = true;
+    document.getElementById('lesson-view').style.display = 'none';
+    document.getElementById('quiz-section').style.display = 'none';
+    show('processing-view');
 
-    const body = document.getElementById('quizBody');
-    body.innerHTML = '';
-
-    state.lesson.questions.forEach((q, i) => {
-      const block = document.createElement('div');
-      block.className = 'question-block';
-      block.innerHTML = `
-        <div class="q-num">Question ${i + 1} of 5</div>
-        <div class="q-text">${q.question}</div>
-        <div class="q-options">
-          ${q.options.map((opt, j) => `
-            <label class="q-option" id="opt-${i}-${j}">
-              <input type="radio" name="q${i}" value="${j}" onchange="selectAnswer(${i}, ${j}, this)">
-              <div class="q-radio"></div>
-              <span class="q-label">${opt}</span>
-            </label>
-          `).join('')}
-        </div>
-      `;
-      body.appendChild(block);
-    });
-
-    showScreen('Quiz');
-  }
-
-  function selectAnswer(qi, vi, input) {
-    // Deselect siblings
-    document.querySelectorAll(`[id^="opt-${qi}-"]`).forEach(l => l.classList.remove('selected'));
-    document.getElementById(`opt-${qi}-${vi}`).classList.add('selected');
-    state.answers[qi] = input.value;
-    updateAnswerCount();
-  }
-
-  function updateAnswerCount() {
-    const count = Object.keys(state.answers).length;
-    document.getElementById('answeredCount').textContent = count;
-    document.getElementById('btnSubmit').disabled = count < 5;
-  }
-
-  // ── SUBMIT QUIZ ──
-  async function submitQuiz() {
-    const btn = document.getElementById('btnSubmit');
-    btn.disabled = true;
-    btn.textContent = 'Grading...';
-
-    showScreen('Loading');
-    setLoading('Grading your answers...');
-
-    const answers = [0,1,2,3,4].map(i => {
-      const v = state.answers[i];
-      return v !== undefined ? state.lesson.questions[i].options[parseInt(v)] : '';
-    });
+    // Animate steps
+    const steps = ['step-grade','step-store','step-pay','step-nft'];
+    steps.forEach((s, i) => setTimeout(() => {
+      document.getElementById(s).classList.add('active');
+      if (i > 0) document.getElementById(steps[i-1]).classList.remove('active');
+      if (i > 0) document.getElementById(steps[i-1]).classList.add('done');
+    }, i * 3000));
 
     try {
       const res = await fetch('/submit-quiz', {
@@ -1190,109 +666,126 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: state.student.email,
-          lessonId: state.lesson.lessonId,
           answers,
-          quizStartTime: state.quizStartTime
-        })
+          topic: state.lesson.topic,
+        }),
       });
-
-      const d = await res.json();
-      showResult(d);
-
+      const data = await res.json();
+      setTimeout(() => handleResult(data), 12000);
     } catch (err) {
-      showResult({ passed: false, score: 0, error: err.message });
+      show('register-view');
+      document.getElementById('register-error').textContent = 'SUBMISSION FAILED: ' + err.message;
     }
   }
 
-  // ── RESULT ──
-  function showResult(d) {
-    const box = document.getElementById('resultBox');
-    const passed = d.passed;
-    const score  = d.score || 0;
+  function handleResult(data) {
+    steps.forEach(s => {
+      document.getElementById(s).classList.remove('active');
+      document.getElementById(s).classList.add('done');
+    });
 
-    if (passed) state.totalEarned += 0.5;
-    updateSidebar();
-
-    if (passed) {
-      box.innerHTML = `
-        <div class="result-icon">🎓</div>
-        <h2 class="result-title pass">You <em>earned this.</em></h2>
-        <div class="result-score">${score} out of 5 correct</div>
-        <div class="result-payment">
-          <div class="rp-label">Payment sent to your wallet</div>
-          <div class="rp-amount">${d.amountPaid || '0.50 cUSD'}</div>
-          ${d.txHash ? `<div class="rp-tx">TX: <a href="https://sepolia.basescan.org/tx/${d.txHash}" target="_blank">${d.txHash.slice(0,20)}...${d.txHash.slice(-8)}</a></div>` : ''}
-        </div>
-        ${d.nftMinted ? `
-        <div class="result-nft">
-          <div class="rn-icon">🖼️</div>
-          <div class="rn-text">
-            <div class="rn-title">Impact NFT minted</div>
-            <div class="rn-sub">Permanent proof of this lesson on-chain</div>
-          </div>
-        </div>` : ''}
-        <p class="result-message">
-          This wasn't given to you. You read the lesson, answered the questions, and proved you understood.
-          The cUSD is already in your wallet. Come back tomorrow for your next lesson.
-        </p>
-        <button class="result-next" onclick="showScreen('Register')">← Back to home</button>
-      `;
-    } else if (d.suspicious) {
-      box.innerHTML = `
-        <div class="result-icon">⚠️</div>
-        <h2 class="result-title fail">Too <em>fast.</em></h2>
-        <div class="result-score">Quiz completed before reading time finished</div>
-        <p class="result-message">
-          The agent noticed something unusual. The quiz was answered before the lesson could have been read.
-          Come back and try again — read carefully this time.
-        </p>
-        <button class="result-next" onclick="loadLesson()">Try Again</button>
-      `;
+    if (data.passed) {
+      renderResult(data);
     } else {
-      box.innerHTML = `
-        <div class="result-icon">📖</div>
-        <h2 class="result-title fail">Not quite. <em>Try again.</em></h2>
-        <div class="result-score">${score} out of 5 — need 4 to pass</div>
-        <p class="result-message">
-          You need 4 or 5 to earn. Go back, read the lesson again more carefully,
-          and take the quiz a second time. You can do this.
-        </p>
-        <button class="result-next" onclick="showScreen('Lesson')">← Back to Lesson</button>
-      `;
+      document.getElementById('fail-score').textContent = (data.score || 0) + '%';
+      show('fail-view');
+    }
+  }
+
+  const steps = ['step-grade','step-store','step-pay','step-nft'];
+
+  function renderResult(data) {
+    // Score
+    document.getElementById('result-score').textContent = (data.score || 100) + '%';
+    document.getElementById('result-msg').textContent = data.message || 'Lesson complete. Payment sent. NFT minted.';
+
+    // Payment card
+    if (data.payment) {
+      const p = data.payment;
+      document.getElementById('payment-hash').textContent = p.txHash || '—';
+      document.getElementById('payment-amount').textContent = p.amount || '0.10 cUSD';
+      const celoLink = document.getElementById('celoscan-link');
+      celoLink.href = p.celoscan || p.explorer || '#';
+      document.getElementById('payment-card').style.display = 'block';
+    } else if (data.txHash) {
+      // legacy flat response
+      document.getElementById('payment-hash').textContent = data.txHash;
+      document.getElementById('celoscan-link').href = `https://celo-sepolia.celoscan.io/tx/${data.txHash}`;
+      document.getElementById('payment-card').style.display = 'block';
     }
 
-    showScreen('Result');
+    // NFT card
+    if (data.nft) {
+      const n = data.nft;
+      document.getElementById('nft-hash').textContent = n.txHash || '—';
+      document.getElementById('basescan-link').href = n.basescan || '#';
+
+      if (n.rarible) {
+        const rl = document.getElementById('rarible-link');
+        rl.href = n.rarible;
+        rl.style.display = 'inline-block';
+      }
+      if (n.opensea) {
+        const ol = document.getElementById('opensea-link');
+        ol.href = n.opensea;
+        ol.style.display = 'inline-block';
+      }
+
+      // NFT preview
+      if (n.image) {
+        document.getElementById('nft-art-img').src = n.image;
+        document.getElementById('nft-name-label').textContent = n.name || 'Impact NFT';
+        document.getElementById('nft-theme-label').textContent = n.theme ? `Art style: ${n.theme}` : '';
+        if (n.rarible) {
+          document.getElementById('nft-rarible-badge').textContent = 'VIEW ON RARIBLE →';
+          document.getElementById('nft-rarible-badge').style.cursor = 'pointer';
+          document.getElementById('nft-rarible-badge').onclick = () => window.open(n.rarible, '_blank');
+        }
+        document.getElementById('nft-preview-card').style.display = 'block';
+      }
+
+      document.getElementById('nft-card').style.display = 'block';
+    } else if (data.mintTx || data.nftTx) {
+      const txHash = data.mintTx || data.nftTx;
+      document.getElementById('nft-hash').textContent = txHash;
+      document.getElementById('basescan-link').href = `https://sepolia.basescan.org/tx/${txHash}`;
+      document.getElementById('nft-card').style.display = 'block';
+    }
+
+    // Filecoin
+    if (data.filecoin) {
+      const f = data.filecoin;
+      document.getElementById('filecoin-cid').textContent = f.imageCID || f.metaCID || '—';
+      document.getElementById('ipfs-link').href = f.ipfsUrl || f.gateway || '#';
+      document.getElementById('meta-link').href = `https://ipfs.io/ipfs/${f.metaCID}`;
+      document.getElementById('filecoin-card').style.display = 'block';
+    } else if (data.cid || data.filecoinCID) {
+      const cid = data.cid || data.filecoinCID;
+      document.getElementById('filecoin-cid').textContent = cid;
+      document.getElementById('ipfs-link').href = `https://ipfs.io/ipfs/${cid}`;
+      document.getElementById('filecoin-card').style.display = 'block';
+    }
+
+    show('result-view');
   }
 
-  // ── UI HELPERS ──
-  function setLoading(msg) {
-    document.getElementById('loadingText').textContent = msg;
+  function retryQuiz() {
+    renderQuiz(state.quiz);
+    show('quiz-section');
+    document.getElementById('lesson-view').style.display = 'block';
+    document.getElementById('quiz-section').style.display = 'block';
+    document.getElementById('result-view').style.display = 'none';
+    document.getElementById('fail-view').style.display = 'none';
+    document.getElementById('submit-btn').disabled = false;
   }
 
-  function showStatus(id, msg, type) {
-    const el = document.getElementById(id);
-    el.innerHTML = `<div class="status-msg ${type}">${msg}</div>`;
+  function resetLesson() {
+    state = { student: null, lesson: null, quiz: null, timerInterval: null, secondsLeft: 180 };
+    if (state.timerInterval) clearInterval(state.timerInterval);
+    document.getElementById('timer').textContent = '3:00';
+    document.getElementById('timer').style.color = 'var(--gold)';
+    show('register-view');
   }
-
-  function updateSidebar() {
-    if (!state.student) return;
-    const info = document.getElementById('studentInfo');
-    info.style.display = 'block';
-    document.getElementById('siName').textContent = state.student.name;
-    document.getElementById('siGrade').textContent =
-      state.student.grade.replace('_', ' ').toUpperCase() + ' · Age ' + state.student.age;
-    document.getElementById('earned').textContent = state.totalEarned.toFixed(2) + ' cUSD';
-  }
-
-  // Treasury
-  async function loadTreasury() {
-    try {
-      const r = await fetch('/status');
-      const d = await r.json();
-      if (d.treasury) document.getElementById('treasury').textContent = d.treasury + ' cUSD';
-    } catch { document.getElementById('treasury').textContent = '—'; }
-  }
-  loadTreasury();
 </script>
 </body>
 </html>

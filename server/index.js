@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
- 
+
 import express from "express";
 import { generateFullLesson } from "../agent/teach.js";
 import { gradeQuiz } from "../agent/grade.js";
@@ -8,21 +8,21 @@ import { defendAgent } from "../agent/defend.js";
 import { registerStudent, verifyStudent, payStudent, getContractStats, getStudentInfo, getSigner, getEduChainContract, getCUSDContract } from "../agent/pay.js";
 import { storeOnFilecoin } from "../agent/store.js";
 import { mintImpactNFT, getAllNFTs } from "../agent/nft.js";
-import { checkSurvivalMode } from "../agent/survival.js";
+import { checkSurvivalMode, fundTreasuryFromNFTSale, getNFTPrice } from "../agent/survival.js";
 import { getOrCreateStudentWallet } from "../agent/privy.js";
 import memory from "../agent/memory.js";
 import { ethers } from "ethers";
- 
+
 const app = express();
 app.use(express.json());
 app.use(express.static("frontend"));
- 
+
 const PORT = process.env.PORT || 3000;
 const APP_URL = process.env.APP_URL || `http://localhost:${PORT}`;
 const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
 const IMPACT_NFT_ADDRESS = process.env.IMPACT_NFT_ADDRESS;
- 
-// ─── CURRICULUM ENGINE ───
+
+// ─── CURRICULUM ENGINE ───────────────────────────────────────────────────────
 function assignTopicForGrade(grade, age) {
   const curriculum = {
     primary_1: [
@@ -106,18 +106,18 @@ function assignTopicForGrade(grade, age) {
       "Biology: Genetics and Evolution"
     ]
   };
- 
+
   const topics = curriculum[grade] || curriculum["primary_3"];
   const day = new Date().getDate();
   return topics[day % topics.length];
 }
- 
-// ─── GET /.well-known/agent.json ───
+
+// ─── GET /.well-known/agent.json ─────────────────────────────────────────────
 app.get("/.well-known/agent.json", async (req, res) => {
   try {
     let stats = { totalStudents: 0, totalLessons: 0, totalPaid: "0", treasuryBalance: "0", runwayDays: 0, survivalMode: false, survivalActivations: 0 };
     try { stats = await getContractStats(); } catch (e) {}
- 
+
     res.json({
       name: "EduChain",
       version: "1.0.0",
@@ -150,20 +150,21 @@ app.get("/.well-known/agent.json", async (req, res) => {
         submitQuiz: "/submit-quiz",
         impactNFTs: "/impact-nfts",
         buyNFT: "/buy-nft/:tokenId",
-        survivalLog: "/survival-log"
+        survivalLog: "/survival-log",
+        survivalStatus: "/survival-status"
       }
     });
   } catch (err) {
     res.status(500).json({ error: err.message, humanInvolved: false });
   }
 });
- 
-// ─── GET /status ───
+
+// ─── GET /status ─────────────────────────────────────────────────────────────
 app.get("/status", async (req, res) => {
   try {
     let stats = { totalStudents: 0, totalLessons: 0, totalPaid: "0", treasuryBalance: "0", runwayDays: 0, survivalMode: false, survivalActivations: 0 };
     try { stats = await getContractStats(); } catch (e) {}
- 
+
     res.json({
       status: "active",
       survivalMode: stats.survivalMode,
@@ -183,7 +184,7 @@ app.get("/status", async (req, res) => {
         studentsBlacklisted: memory.metrics.studentsBlacklisted,
         impactNFTsMinted: memory.metrics.nftsMinted,
         impactNFTsSold: memory.metrics.nftsSold,
-        totalRaisedFromNFTs: `${memory.metrics.totalRaisedFromNFTs} cUSD`
+        totalRaisedFromNFTs: `${memory.metrics.totalRaisedFromNFTs || 0} cUSD`
       },
       recentActions: memory.getRecentActions(5),
       humanInvolved: false
@@ -192,8 +193,8 @@ app.get("/status", async (req, res) => {
     res.status(500).json({ error: err.message, humanInvolved: false });
   }
 });
- 
-// ─── GET /proof ───
+
+// ─── GET /proof ──────────────────────────────────────────────────────────────
 app.get("/proof", async (req, res) => {
   try {
     const recentPayments = memory.actions
@@ -207,7 +208,7 @@ app.get("/proof", async (req, res) => {
         timestamp: a.timestamp,
         humanInvolved: false
       }));
- 
+
     res.json({
       statement: `EduChain has operated for ${memory.getUptimeHours()} hours with zero human actions recorded.`,
       verification: {
@@ -223,8 +224,8 @@ app.get("/proof", async (req, res) => {
     res.status(500).json({ error: err.message, humanInvolved: false });
   }
 });
- 
-// ─── POST /message ───
+
+// ─── POST /message ───────────────────────────────────────────────────────────
 app.post("/message", async (req, res) => {
   try {
     const { from, message } = req.body;
@@ -240,25 +241,22 @@ app.post("/message", async (req, res) => {
     });
   }
 });
- 
-// ─── POST /register — Student Registration with Privy Embedded Wallet ───
+
+// ─── POST /register ──────────────────────────────────────────────────────────
 app.post("/register", async (req, res) => {
   try {
     const { phoneOrEmail, email, name, age, grade } = req.body;
     const contact = phoneOrEmail || email;
- 
+
     if (!contact) {
       return res.status(400).json({ error: "Phone number or email is required", humanInvolved: false });
     }
 
-    // Get or create a real Privy embedded wallet for this student
-    // Same contact always returns the same wallet (deterministic via Privy)
-    // Falls back to ethers deterministic wallet if Privy fails
     const privyResult = await getOrCreateStudentWallet(contact);
     const walletAddress = privyResult.address;
 
     console.log(`[REGISTER] Student: ${contact} → wallet: ${walletAddress} (${privyResult.fallback ? "fallback" : "privy"})`);
- 
+
     memory.logAction({
       type: "REGISTER",
       message: `Student registered: ${contact} → ${walletAddress}`,
@@ -268,10 +266,10 @@ app.post("/register", async (req, res) => {
       grade: grade || null,
       privyUserId: privyResult.userId
     });
- 
+
     let registered = false;
     let verified = false;
- 
+
     try {
       await registerStudent(walletAddress, contact);
       registered = true;
@@ -284,7 +282,7 @@ app.post("/register", async (req, res) => {
         console.log(`[REGISTER] Registration note: ${err.message}`);
       }
     }
- 
+
     try {
       await verifyStudent(walletAddress);
       verified = true;
@@ -297,10 +295,10 @@ app.post("/register", async (req, res) => {
         console.log(`[REGISTER] Verification note: ${err.message}`);
       }
     }
- 
+
     memory.metrics.studentsRegistered++;
     const assignedTopic = assignTopicForGrade(grade, age);
- 
+
     res.json({
       success: true,
       message: verified
@@ -323,22 +321,21 @@ app.post("/register", async (req, res) => {
     res.status(500).json({ error: err.message, humanInvolved: false });
   }
 });
- 
-// ─── POST /lesson ───
+
+// ─── POST /lesson ─────────────────────────────────────────────────────────────
 app.post("/lesson", async (req, res) => {
   try {
     const { wallet, topic, age, grade, email } = req.body;
     const assignedTopic = topic || assignTopicForGrade(grade, parseInt(age) || 12);
- 
+
     if (!assignedTopic) {
       return res.status(400).json({ error: "Could not assign a lesson topic", humanInvolved: false });
     }
- 
+
     console.log(`[LESSON] Assigned topic: ${assignedTopic} for grade: ${grade || "unknown"}, age: ${age || "unknown"}`);
- 
+
     const lessonData = await generateFullLesson(assignedTopic, parseInt(age) || 12);
 
-    // Get the student's real wallet so payment goes to the right place
     const lessonContact = wallet || email || "anonymous";
     let lessonWalletAddress = process.env.AGENT_ADDRESS;
     if (lessonContact !== "anonymous") {
@@ -349,7 +346,7 @@ app.post("/lesson", async (req, res) => {
         console.log(`[LESSON] Wallet lookup failed, using agent address: ${e.message}`);
       }
     }
- 
+
     memory.storeQuiz(lessonData.quizId, {
       wallet: lessonWalletAddress,
       topic: assignedTopic,
@@ -357,14 +354,14 @@ app.post("/lesson", async (req, res) => {
       correctAnswers: lessonData.quiz.map(q => q.answer),
       quizStartTime: new Date().toISOString()
     });
- 
+
     memory.logAction({
       type: "LESSON",
       message: `Lesson delivered: ${assignedTopic} to ${lessonContact}`,
       topic: assignedTopic
     });
     memory.metrics.lessonsDelivered++;
- 
+
     res.json({
       success: true,
       topic: assignedTopic,
@@ -390,29 +387,28 @@ app.post("/lesson", async (req, res) => {
     res.status(500).json({ error: err.message, humanInvolved: false });
   }
 });
- 
-// ─── POST /submit-quiz ───
+
+// ─── POST /submit-quiz ───────────────────────────────────────────────────────
 app.post("/submit-quiz", async (req, res) => {
   try {
     const { wallet, email, quizId, topic, answers, quizStartTime } = req.body;
     const studentId = wallet || email || "anonymous";
- 
+
     if (!answers || !Array.isArray(answers) || answers.length !== 5) {
       return res.status(400).json({ error: "Exactly 5 answers required", humanInvolved: false });
     }
- 
+
     const quizData = memory.getQuiz(quizId);
     const correctAnswers = quizData ? quizData.correctAnswers : answers;
     const startTime = new Date(Date.now() - 240000).toISOString();
     const quizTopic = topic || (quizData ? quizData.topic : "General");
 
-    // Use the student's real wallet stored at lesson time
     const payWallet = quizData?.wallet || process.env.AGENT_ADDRESS;
     console.log(`[SUBMIT] Paying to wallet: ${payWallet}`);
- 
+
     const durationSeconds = Math.floor((Date.now() - new Date(startTime).getTime()) / 1000);
     const gradeResult = await gradeQuiz(answers, correctAnswers, durationSeconds, quizTopic);
- 
+
     memory.metrics.quizzesGraded++;
     memory.logAction({
       type: "GRADE",
@@ -420,25 +416,25 @@ app.post("/submit-quiz", async (req, res) => {
       score: gradeResult.score,
       topic: quizTopic
     });
- 
+
     const response = {
+      passed: gradeResult.passed,
       score: gradeResult.score,
       outOf: 5,
-      passed: gradeResult.passed,
       suspicious: gradeResult.suspicious,
       suspiciousReason: gradeResult.suspiciousReason,
-      payment: gradeResult.passed && !gradeResult.suspicious ? `${gradeResult.reward} cUSD` : "0",
-      amountPaid: gradeResult.passed && !gradeResult.suspicious ? `${gradeResult.reward} cUSD` : null,
-      paymentTx: null,
-      txHash: null,
-      celoscan: null,
-      filecoin: null,
-      nftTokenId: null,
       feedback: gradeResult.feedback,
-      humanInvolved: false
+      humanInvolved: false,
+      payment: null,
+      nft: null,
+      filecoin: null,
+      message: gradeResult.passed
+        ? `You passed! Payment sent and NFT minted. humanInvolved: false.`
+        : `Score ${gradeResult.score}/5 — need 4 or more to earn. Try again.`
     };
- 
+
     if (gradeResult.passed && !gradeResult.suspicious) {
+      // ── Step 1: Store on Filecoin ──
       let storageResult = null;
       try {
         storageResult = await storeOnFilecoin({
@@ -449,13 +445,22 @@ app.post("/submit-quiz", async (req, res) => {
           paymentTx: "pending",
           quizDuration: durationSeconds
         });
-        response.filecoin = storageResult.ipfsGateway;
       } catch (err) {
         console.log(`[SUBMIT] Storage note: ${err.message}`);
       }
- 
+
       const filecoinCID = storageResult ? storageResult.filecoinCID : "pending";
- 
+
+      if (storageResult) {
+        response.filecoin = {
+          imageCID: filecoinCID,
+          metaCID: filecoinCID,
+          gateway: storageResult.ipfsGateway,
+          ipfsUrl: `https://ipfs.io/ipfs/${filecoinCID}`
+        };
+      }
+
+      // ── Step 2: Pay student in cUSD on Celo ──
       try {
         const paymentResult = await payStudent(
           payWallet,
@@ -464,44 +469,91 @@ app.post("/submit-quiz", async (req, res) => {
           filecoinCID,
           startTime
         );
-        response.paymentTx = paymentResult.txHash;
+        response.payment = {
+          amount: `${gradeResult.reward} cUSD`,
+          to: payWallet,
+          txHash: paymentResult.txHash,
+          network: "Celo Sepolia",
+          celoscan: `https://celo-sepolia.celoscan.io/tx/${paymentResult.txHash}`,
+          explorer: `https://celo-sepolia.celoscan.io/tx/${paymentResult.txHash}`
+        };
+        // Legacy flat fields for backward compat
         response.txHash = paymentResult.txHash;
         response.celoscan = `https://celo-sepolia.celoscan.io/tx/${paymentResult.txHash}`;
+        response.paymentTx = paymentResult.txHash;
         console.log(`[SUBMIT] ✅ Payment sent to ${payWallet}: ${paymentResult.txHash}`);
+
+        memory.logAction({
+          type: "PAYMENT",
+          message: `Payment sent: ${gradeResult.reward} cUSD to ${payWallet} for ${quizTopic}`,
+          txHash: paymentResult.txHash,
+          amount: gradeResult.reward,
+          topic: quizTopic,
+          wallet: payWallet,
+          humanInvolved: false
+        });
+        memory.metrics.paymentsReleased++;
       } catch (err) {
         console.log(`[SUBMIT] Payment note: ${err.message}`);
-        response.paymentTx = "pending";
+        response.payment = {
+          amount: `${gradeResult.reward} cUSD`,
+          to: payWallet,
+          txHash: "pending",
+          network: "Celo Sepolia",
+          note: "Payment queued — will process when on-chain conditions are met"
+        };
         response.txHash = "pending";
-        response.paymentNote = "Payment queued — will process when on-chain conditions are met";
-        memory.logAction({
-          type: "PAYMENT_QUEUED",
-          message: `Payment queued for ${studentId}: ${err.message}`,
-          wallet: payWallet,
-          score: gradeResult.score,
-          topic: quizTopic
-        });
+        response.paymentTx = "pending";
       }
- 
-      await new Promise(r => setTimeout(r, 5000));
- 
+
+      // ── Step 3: Wait then mint NFT ──
+      await new Promise(r => setTimeout(r, 3000));
+
       try {
-        const nftResult = await mintImpactNFT(
-          payWallet,
-          quizTopic,
-          gradeResult.score,
-          gradeResult.reward,
-          filecoinCID,
-          response.paymentTx || "pending"
-        );
+        const nftResult = await mintImpactNFT({
+          studentName: studentId,
+          studentWallet: payWallet,
+          topic: quizTopic,
+          grade: quizData?.grade,
+          lessonNumber: Date.now(),
+          score: gradeResult.score
+        });
+
+        response.nft = {
+          name: nftResult.nftName,
+          theme: nftResult.theme,
+          tokenId: nftResult.tokenId,
+          txHash: nftResult.txHash,
+          basescan: nftResult.basescan,
+          rarible: nftResult.raribleUrl,
+          opensea: nftResult.openseaUrl,
+          image: nftResult.imageUrl,
+          metadata: nftResult.metaUrl
+        };
+        // Legacy flat fields
         response.nftTokenId = nftResult.tokenId;
         response.nftMinted = true;
-        response.nftTx = nftResult.mintTx;
-        response.nftScan = `https://sepolia.basescan.org/tx/${nftResult.mintTx}`;
+        response.nftTx = nftResult.txHash;
+        response.nftScan = nftResult.basescan;
+
+        if (storageResult && nftResult.imageCID) {
+          response.filecoin = {
+            imageCID: nftResult.imageCID,
+            metaCID: nftResult.metaCID,
+            gateway: nftResult.filecoinGateway,
+            ipfsUrl: `https://ipfs.io/ipfs/${nftResult.imageCID}`
+          };
+        }
+
+        memory.metrics.nftsMinted++;
+        console.log(`[SUBMIT] ✅ NFT minted: #${nftResult.tokenId} (${nftResult.theme})`);
       } catch (err) {
         console.log(`[SUBMIT] NFT note: ${err.message}`);
       }
+
+      response.message = `Passed! ${gradeResult.reward} cUSD sent${response.nft ? ` and "${response.nft.theme}" NFT minted` : ""}. humanInvolved: false.`;
     }
- 
+
     if (quizId) memory.removeQuiz(quizId);
     res.json(response);
   } catch (err) {
@@ -509,24 +561,24 @@ app.post("/submit-quiz", async (req, res) => {
     res.status(500).json({ error: err.message, humanInvolved: false });
   }
 });
- 
-// ─── POST /demo ───
+
+// ─── POST /demo ──────────────────────────────────────────────────────────────
 app.post("/demo", async (req, res) => {
   try {
     const startTime = Date.now();
     const topic = req.body.topic || "Clean Water Safety";
     const lessonData = await generateFullLesson(topic);
- 
+
     memory.logAction({ type: "LESSON", message: `Demo lesson generated: ${topic}`, topic });
     memory.metrics.lessonsDelivered++;
- 
+
     const correctAnswers = lessonData.quiz.map(q => q.answer);
     const quizStartTime = new Date(Date.now() - 200000).toISOString();
     const gradeResult = await gradeQuiz(correctAnswers, correctAnswers, 200, topic);
- 
+
     memory.logAction({ type: "GRADE", message: `Demo quiz graded: ${gradeResult.score}/5`, score: gradeResult.score, topic });
     memory.metrics.quizzesGraded++;
- 
+
     const storageResult = await storeOnFilecoin({
       wallet: process.env.AGENT_ADDRESS,
       topic,
@@ -535,7 +587,7 @@ app.post("/demo", async (req, res) => {
       paymentTx: "demo",
       quizDuration: 200
     });
- 
+
     let paymentResult = { success: true, txHash: "demo-mode", amount: `${gradeResult.reward} cUSD` };
     try {
       paymentResult = await payStudent(
@@ -548,23 +600,23 @@ app.post("/demo", async (req, res) => {
     } catch (err) {
       paymentResult.note = "Payment simulated in demo";
     }
- 
+
     let nftResult = { tokenId: memory.metrics.nftsMinted, mintTx: "pending", success: true };
     try {
-      nftResult = await mintImpactNFT(
-        process.env.AGENT_ADDRESS,
+      nftResult = await mintImpactNFT({
+        studentName: "Demo Student",
+        studentWallet: process.env.AGENT_ADDRESS,
         topic,
-        gradeResult.score,
-        gradeResult.reward,
-        storageResult.filecoinCID,
-        paymentResult.txHash || "demo"
-      );
+        grade: "primary_4",
+        lessonNumber: Date.now(),
+        score: gradeResult.score
+      });
     } catch (err) {
       console.log(`[DEMO] NFT note: ${err.message}`);
     }
- 
+
     const durationSeconds = Math.round((Date.now() - startTime) / 1000);
- 
+
     res.json({
       demo: "complete",
       durationSeconds,
@@ -572,9 +624,9 @@ app.post("/demo", async (req, res) => {
         lesson: { topic, content: lessonData.lesson, generatedBy: "venice-ai", model: "llama-3.3-70b", humanInvolved: false },
         quiz: { questions: lessonData.quiz, generatedBy: "venice-ai", humanInvolved: false },
         grade: { score: gradeResult.score, outOf: 5, passed: gradeResult.passed, gradedBy: "ai", humanInvolved: false },
-        payment: { amount: `${gradeResult.reward} cUSD`, tx: paymentResult.txHash, network: "celo-sepolia", humanInvolved: false },
+        payment: { amount: `${gradeResult.reward} cUSD`, tx: paymentResult.txHash, celoscan: `https://celo-sepolia.celoscan.io/tx/${paymentResult.txHash}`, network: "celo-sepolia", humanInvolved: false },
         storage: { filecoinCID: storageResult.filecoinCID, ipfsGateway: storageResult.ipfsGateway, humanInvolved: false },
-        nft: { tokenId: nftResult.tokenId, mintTx: nftResult.mintTx || "pending", listedForSale: true, price: "1 cUSD", humanInvolved: false }
+        nft: { tokenId: nftResult.tokenId, mintTx: nftResult.txHash || nftResult.mintTx || "pending", theme: nftResult.theme, rarible: nftResult.raribleUrl, image: nftResult.imageUrl, humanInvolved: false }
       },
       totalHumanActions: 0,
       humanInvolved: false
@@ -583,8 +635,8 @@ app.post("/demo", async (req, res) => {
     res.status(500).json({ demo: "error", error: err.message, humanInvolved: false });
   }
 });
- 
-// ─── GET /impact-nfts ───
+
+// ─── GET /impact-nfts ─────────────────────────────────────────────────────────
 app.get("/impact-nfts", async (req, res) => {
   try {
     const nftData = await getAllNFTs();
@@ -600,42 +652,92 @@ app.get("/impact-nfts", async (req, res) => {
     res.status(500).json({ error: err.message, humanInvolved: false });
   }
 });
- 
-// ─── POST /buy-nft/:tokenId ───
+
+// ─── POST /buy-nft/:tokenId ───────────────────────────────────────────────────
 app.post("/buy-nft/:tokenId", async (req, res) => {
   try {
     const tokenId = parseInt(req.params.tokenId);
-    memory.logAction({ type: "NFT_SALE", message: `Impact NFT #${tokenId} purchase requested`, tokenId });
+    const { buyerAddress } = req.body;
+
+    const survivalStatus = await checkSurvivalMode();
+    const pricing = getNFTPrice(survivalStatus.level);
+
+    let fundResult = { success: false };
+    if (buyerAddress) {
+      fundResult = await fundTreasuryFromNFTSale(pricing.price, buyerAddress);
+    }
+
+    memory.logAction({
+      type: "NFT_SALE",
+      message: `Impact NFT #${tokenId} sold for ${pricing.price} cUSD`,
+      tokenId,
+      price: pricing.price,
+      buyer: buyerAddress,
+      treasuryFunded: fundResult.success,
+      fundTx: fundResult.txHash,
+      humanInvolved: false
+    });
+
     res.json({
       success: true,
       tokenId,
-      pricePaid: "1 cUSD",
-      poolFunded: "1 cUSD added to reward pool",
-      message: "Thank you. This funds two more student lesson rewards.",
+      pricePaid: `${pricing.price} cUSD`,
+      treasuryFunded: fundResult.success,
+      fundTx: fundResult.txHash,
+      fundScan: fundResult.celoscan,
+      survivalLevel: survivalStatus.level,
+      message: `Thank you. ${pricing.message}. This funds ${Math.floor(parseFloat(pricing.price) / 0.10)} student lesson rewards.`,
       humanInvolved: false
     });
   } catch (err) {
     res.status(500).json({ error: err.message, humanInvolved: false });
   }
 });
- 
-// ─── GET /survival-log ───
+
+// ─── GET /survival-log ────────────────────────────────────────────────────────
 app.get("/survival-log", (req, res) => {
   res.json({
-    totalActivations: memory.survivalLog.length,
+    totalActivations: memory.survivalLog ? memory.survivalLog.length : 0,
     message: "Each activation is proof EduChain funded its own survival without human help.",
-    activations: memory.survivalLog,
+    activations: memory.survivalLog || [],
     humanInvolved: false
   });
 });
- 
-// ─── Serve frontend pages ───
+
+// ─── GET /survival-status ─────────────────────────────────────────────────────
+app.get("/survival-status", async (req, res) => {
+  try {
+    const status = await checkSurvivalMode();
+    const pricing = getNFTPrice(status.level);
+
+    res.json({
+      ...status,
+      nftPrice: pricing.price,
+      nftMessage: pricing.message,
+      metrics: {
+        totalRaisedFromNFTs: `${memory.metrics.totalRaisedFromNFTs || 0} cUSD`,
+        nftsSold: memory.metrics.nftsSold || 0,
+        studentsCanStillPay: status.canPay
+      },
+      message: status.level === "HEALTHY"
+        ? "Operating normally. Treasury healthy."
+        : status.level === "SHUTDOWN"
+        ? "Treasury empty. Payments paused. Buy an Impact NFT to restart."
+        : `Survival level: ${status.level}. ${Math.round(parseFloat(status.treasuryBalance))} cUSD remaining.`,
+      humanInvolved: false
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message, humanInvolved: false });
+  }
+});
+
+// ─── Serve frontend pages ─────────────────────────────────────────────────────
 app.get("/", (req, res) => res.sendFile("index.html", { root: "frontend" }));
 app.get("/learn", (req, res) => res.sendFile("learn.html", { root: "frontend" }));
 app.get("/agent", (req, res) => res.sendFile("agent.html", { root: "frontend" }));
 app.get("/impact", (req, res) => res.sendFile("impact.html", { root: "frontend" }));
- 
-// ─── START ───
+
+// ─── START ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log("═══════════════════════════════════════");
   console.log(`  EDUCHAIN SERVER LIVE ON PORT ${PORT}`);
@@ -647,8 +749,8 @@ app.listen(PORT, () => {
   console.log("═══════════════════════════════════════");
   console.log("  humanInvolved: false");
   console.log("═══════════════════════════════════════\n");
- 
+
   memory.logAction({ type: "SERVER", message: "EduChain server started" });
 });
- 
+
 export default app;
