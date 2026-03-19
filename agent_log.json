@@ -1,0 +1,86 @@
+{
+  "agent": {
+    "name": "EduChain",
+    "version": "1.0.0",
+    "identity": {
+      "erc8004": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+      "registrationTx": "0x7b0d27abcea242aef9242428d5e735f8a2c6309aace2e13ed66e96556cf94d30",
+      "basescan": "https://basescan.org/tx/0x7b0d27abcea242aef9242428d5e735f8a2c6309aace2e13ed66e96556cf94d30",
+      "operatorWallet": "0xe5aF78bf87C3FfB7c9f74A1c450AAfC19227b141"
+    },
+    "mission": "300 million children have no access to school. EduChain teaches them and pays them when they prove they learned.",
+    "humanInvolved": false,
+    "loopInterval": "30s",
+    "startedAt": "2026-03-19T02:49:47.593Z"
+  },
+  "decisionLoop": {
+    "description": "Every 30 seconds the agent runs think() which checks treasury, recent payments, and time since last post. It picks the highest priority action and executes it autonomously.",
+    "priorities": [
+      {
+        "level": 1,
+        "action": "SURVIVAL_POST",
+        "trigger": "treasury < 10 cUSD"
+      },
+      {
+        "level": 2,
+        "action": "CELEBRATE_STUDENT",
+        "trigger": "student payment in last 35 minutes"
+      },
+      {
+        "level": 3,
+        "action": "SPONTANEOUS_THOUGHT",
+        "trigger": "more than 2 hours since last post"
+      },
+      {
+        "level": 4,
+        "action": "DAILY_ANNOUNCE",
+        "trigger": "new calendar day"
+      },
+      {
+        "level": 5,
+        "action": "REGISTER_IDENTITY",
+        "trigger": "ERC-8004 not yet registered"
+      }
+    ]
+  },
+  "toolCalls": [],
+  "decisions": [],
+  "retries": [],
+  "failures": [],
+  "payments": [
+    {
+      "timestamp": "2026-03-19T02:50:38.804Z",
+      "txHash": "0x24ee7e5f7386fe32ddf92968df9e962766af08d720646469c3df95e4855582ff",
+      "amount": 0.25,
+      "to": "0xe5aF78bf87C3FfB7c9f74A1c450AAfC19227b141",
+      "topic": "Critical Reading Skills",
+      "score": 4,
+      "network": "Celo Sepolia",
+      "celoscan": "https://celo-sepolia.celoscan.io/tx/0x24ee7e5f7386fe32ddf92968df9e962766af08d720646469c3df95e4855582ff",
+      "humanInvolved": false
+    }
+  ],
+  "nftMints": [],
+  "moltbookPosts": [],
+  "filecoinStores": [
+    {
+      "timestamp": "2026-03-19T02:50:29.674Z",
+      "cid": "QmWqXMmaGWBdrnhgTEJBq7ttpXiRL8uNnyHnmSBWZz9De5",
+      "contentType": "lesson-proof",
+      "ipfsUrl": "https://gateway.pinata.cloud/ipfs/QmWqXMmaGWBdrnhgTEJBq7ttpXiRL8uNnyHnmSBWZz9De5",
+      "humanInvolved": false
+    }
+  ],
+  "summary": {
+    "totalCycles": 0,
+    "totalDecisions": 0,
+    "totalToolCalls": 0,
+    "totalPayments": 1,
+    "totalNFTsMinted": 0,
+    "totalMoltbookPosts": 0,
+    "totalFilecoinStores": 1,
+    "totalRetries": 0,
+    "totalFailures": 0,
+    "lastUpdated": "2026-03-19T02:50:38.804Z"
+  }
+}

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EduChain — My Dashboard</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --border: rgba(255,255,255,0.07);
+    --text: #e8e8f0;
+    --muted: #888899;
+    --green: #00e5a0;
+    --purple: #9b59f5;
+    --blue: #4fa3ff;
+    --gold: #f5c842;
+    --red: #ff4757;
+    --celo: #35d07f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; min-height: 100vh; }
+
+  nav { border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-size: 13px; color: var(--green); letter-spacing: 3px; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: 12px; margin-left: 24px; letter-spacing: 1px; }
+  .nav-links a:hover { color: var(--text); }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 48px 24px 120px; }
+
+  /* ── Lookup form ── */
+  #lookup-view { text-align: center; padding: 80px 0; }
+  #lookup-view h1 { font-size: 24px; font-weight: normal; letter-spacing: 2px; margin-bottom: 8px; }
+  #lookup-view p { color: var(--muted); font-size: 13px; margin-bottom: 40px; }
+  .lookup-form { display: flex; gap: 12px; max-width: 460px; margin: 0 auto; }
+  .lookup-input { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 12px 16px; font-family: inherit; font-size: 14px; outline: none; transition: border-color 0.2s; }
+  .lookup-input:focus { border-color: var(--green); }
+  .lookup-btn { background: transparent; border: 1px solid var(--green); color: var(--green); padding: 12px 24px; font-family: inherit; font-size: 12px; letter-spacing: 2px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+  .lookup-btn:hover { background: var(--green); color: #000; }
+  .lookup-error { color: var(--red); font-size: 12px; margin-top: 12px; letter-spacing: 1px; }
+
+  /* ── Dashboard ── */
+  #dashboard-view { display: none; }
+
+  /* Header */
+  .student-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 40px; padding-bottom: 32px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 20px; }
+  .student-name { font-size: 28px; font-weight: normal; letter-spacing: 2px; margin-bottom: 6px; }
+  .student-email { font-size: 12px; color: var(--muted); letter-spacing: 1px; margin-bottom: 12px; }
+  .student-wallet { font-size: 11px; color: var(--green); letter-spacing: 1px; word-break: break-all; }
+  .minipay-btn { display: inline-block; background: transparent; border: 1px solid var(--celo); color: var(--celo); padding: 10px 20px; font-family: inherit; font-size: 11px; letter-spacing: 2px; cursor: pointer; text-decoration: none; transition: all 0.2s; margin-top: 12px; }
+  .minipay-btn:hover { background: var(--celo); color: #000; }
+
+  /* Stats */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 40px; }
+  @media (max-width: 600px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+  .stat-box { background: var(--surface); border: 1px solid var(--border); padding: 20px; }
+  .stat-value { font-size: 28px; font-weight: bold; color: var(--green); margin-bottom: 4px; }
+  .stat-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; }
+
+  /* Sections */
+  .section-title { font-size: 11px; color: var(--muted); letter-spacing: 3px; margin-bottom: 20px; }
+
+  /* Payment history */
+  .payment-list { margin-bottom: 40px; }
+  .payment-item { background: var(--surface); border: 1px solid var(--border); padding: 16px 20px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .payment-topic { font-size: 13px; color: var(--text); }
+  .payment-score { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .payment-amount { font-size: 18px; color: var(--green); font-weight: bold; white-space: nowrap; }
+  .payment-links { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill-link { font-size: 10px; color: var(--muted); text-decoration: none; border: 1px solid var(--border); padding: 4px 10px; letter-spacing: 1px; transition: all 0.15s; }
+  .pill-link:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+  .pill-link.green { border-color: var(--green); color: var(--green); }
+  .pill-link.purple { border-color: var(--purple); color: var(--purple); }
+  .payment-time { font-size: 10px; color: var(--muted); white-space: nowrap; }
+
+  /* NFT gallery */
+  .nft-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 40px; }
+  .nft-mini { background: var(--surface); border: 1px solid var(--border); overflow: hidden; transition: border-color 0.2s; }
+  .nft-mini:hover { border-color: rgba(155,89,245,0.4); }
+  .nft-mini-art { width: 100%; aspect-ratio: 1; background: #050508; }
+  .nft-mini-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .nft-mini-art-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--border); letter-spacing: 1px; }
+  .nft-mini-info { padding: 12px; }
+  .nft-mini-name { font-size: 12px; color: var(--text); margin-bottom: 4px; }
+  .nft-mini-topic { font-size: 10px; color: var(--purple); letter-spacing: 1px; margin-bottom: 10px; }
+  .nft-mini-links { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  /* Transfer section */
+  .transfer-box { background: var(--surface); border: 1px solid var(--border); padding: 28px; margin-bottom: 40px; }
+  .transfer-box h3 { font-size: 11px; color: var(--muted); letter-spacing: 3px; margin-bottom: 20px; }
+  .transfer-info { font-size: 13px; color: var(--text); line-height: 1.7; margin-bottom: 16px; }
+  .transfer-balance { font-size: 32px; color: var(--green); font-weight: bold; margin-bottom: 8px; }
+  .transfer-sub { font-size: 12px; color: var(--muted); margin-bottom: 24px; }
+  .minipay-steps { font-size: 12px; color: var(--muted); line-height: 2; }
+  .minipay-steps span { color: var(--text); }
+
+  /* Empty states */
+  .empty-msg { text-align: center; padding: 40px; color: var(--muted); font-size: 12px; letter-spacing: 1px; border: 1px dashed var(--border); }
+
+  /* Loading */
+  .loading { text-align: center; padding: 60px; color: var(--muted); font-size: 12px; letter-spacing: 2px; }
+  .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .status-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); padding: 10px 32px; font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; letter-spacing: 1px; }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: inline-block; margin-right: 6px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">EDUCHAIN</div>
+  <div class="nav-links">
+    <a href="/">HOME</a>
+    <a href="/learn">LEARN</a>
+    <a href="/impact.html">IMPACT</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- Lookup -->
+  <div id="lookup-view">
+    <h1>MY DASHBOARD</h1>
+    <p>Enter your email to see your earnings, lessons and NFTs.</p>
+    <div class="lookup-form">
+      <input class="lookup-input" type="email" id="email-input" placeholder="your@email.com" onkeydown="if(event.key==='Enter')loadDashboard()"/>
+      <button class="lookup-btn" onclick="loadDashboard()">VIEW →</button>
+    </div>
+    <div class="lookup-error" id="lookup-error"></div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading-view" style="display:none">
+    <div class="loading">
+      <div class="spinner"></div><br/>LOADING YOUR DASHBOARD...
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard-view">
+
+    <!-- Header -->
+    <div class="student-header">
+      <div>
+        <div class="student-name" id="dash-name">—</div>
+        <div class="student-email" id="dash-email">—</div>
+        <div class="student-wallet" id="dash-wallet">—</div>
+        <a class="minipay-btn" id="celoscan-wallet-link" href="#" target="_blank">VIEW ON CELOSCAN →</a>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--muted);letter-spacing:2px;margin-bottom:8px">TOTAL EARNED</div>
+        <div style="font-size:40px;color:var(--green);font-weight:bold" id="dash-total">0.00</div>
+        <div style="font-size:12px;color:var(--muted)">cUSD</div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-value" id="dash-lessons">0</div>
+        <div class="stat-label">LESSONS PASSED</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="dash-earned">0.00</div>
+        <div class="stat-label">cUSD EARNED</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="dash-nfts">0</div>
+        <div class="stat-label">NFTS MINTED</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="dash-streak">0</div>
+        <div class="stat-label">DAY STREAK</div>
+      </div>
+    </div>
+
+    <!-- Transfer / MiniPay -->
+    <div class="transfer-box">
+      <h3>YOUR EARNINGS</h3>
+      <div class="transfer-balance" id="transfer-balance">0.00 cUSD</div>
+      <div class="transfer-sub">Sent to your wallet on Celo Sepolia</div>
+      <div class="transfer-info">Your earnings go directly to your wallet — no withdrawal needed. To spend them, open <strong>MiniPay</strong> in Opera Mini on your phone and import your wallet address.</div>
+      <div class="minipay-steps">
+        1. Download <span>Opera Mini</span> on your phone<br/>
+        2. Open <span>MiniPay</span> inside Opera Mini<br/>
+        3. Your wallet address: <span id="minipay-wallet">—</span><br/>
+        4. Your cUSD is already there — spend it anywhere MiniPay is accepted
+      </div>
+    </div>
+
+    <!-- Payment history -->
+    <div class="section-title">PAYMENT HISTORY</div>
+    <div class="payment-list" id="payment-list">
+      <div class="empty-msg">NO PAYMENTS YET — PASS A QUIZ TO EARN</div>
+    </div>
+
+    <!-- NFT gallery -->
+    <div class="section-title">YOUR IMPACT NFTS</div>
+    <div class="nft-row" id="nft-gallery">
+      <div class="empty-msg" style="grid-column:1/-1">NO NFTS YET — EARNED AUTOMATICALLY WHEN YOU PASS</div>
+    </div>
+
+    <!-- Learn more -->
+    <a href="/learn" style="display:block;text-align:center;background:transparent;border:1px solid var(--green);color:var(--green);padding:16px;font-family:inherit;font-size:13px;letter-spacing:2px;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.background='var(--green)';this.style.color='#000'" onmouseout="this.style.background='transparent';this.style.color='var(--green)'">
+      TAKE ANOTHER LESSON →
+    </a>
+
+  </div>
+
+</div>
+
+<div class="status-bar">
+  <span><span class="status-dot"></span>AGENT ONLINE · CELO SEPOLIA + BASE SEPOLIA</span>
+  <span>humanInvolved: false</span>
+</div>
+
+<script>
+  // Check URL params on load
+  const urlEmail = new URLSearchParams(window.location.search).get('email');
+  if (urlEmail) {
+    document.getElementById('email-input').value = urlEmail;
+    loadDashboard();
+  }
+
+  async function loadDashboard() {
+    const email = document.getElementById('email-input').value.trim();
+    const errEl = document.getElementById('lookup-error');
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errEl.textContent = 'ENTER A VALID EMAIL ADDRESS';
+      return;
+    }
+    errEl.textContent = '';
+
+    document.getElementById('lookup-view').style.display = 'none';
+    document.getElementById('loading-view').style.display = 'block';
+
+    try {
+      const res = await fetch(`/dashboard-data?email=${encodeURIComponent(email)}`);
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || 'Not found');
+
+      renderDashboard(data, email);
+    } catch (err) {
+      document.getElementById('loading-view').style.display = 'none';
+      document.getElementById('lookup-view').style.display = 'block';
+      errEl.textContent = err.message.toUpperCase();
+    }
+  }
+
+  function timeAgo(ts) {
+    if (!ts) return '—';
+    const diff = Date.now() - new Date(ts).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${Math.floor(hrs/24)}d ago`;
+  }
+
+  function renderDashboard(data, email) {
+    document.getElementById('loading-view').style.display = 'none';
+    document.getElementById('dashboard-view').style.display = 'block';
+
+    // Header
+    document.getElementById('dash-name').textContent = data.name || email.split('@')[0].toUpperCase();
+    document.getElementById('dash-email').textContent = email;
+    document.getElementById('dash-wallet').textContent = data.wallet || '—';
+    document.getElementById('minipay-wallet').textContent = data.wallet || '—';
+    document.getElementById('dash-total').textContent = parseFloat(data.totalEarned || 0).toFixed(2);
+
+    if (data.wallet) {
+      document.getElementById('celoscan-wallet-link').href = `https://celo-sepolia.celoscan.io/address/${data.wallet}`;
+    }
+
+    // Stats
+    document.getElementById('dash-lessons').textContent = data.lessonsCompleted || 0;
+    document.getElementById('dash-earned').textContent = parseFloat(data.totalEarned || 0).toFixed(2);
+    document.getElementById('dash-nfts').textContent = data.nfts?.length || 0;
+    document.getElementById('dash-streak').textContent = data.streak || 0;
+    document.getElementById('transfer-balance').textContent = `${parseFloat(data.totalEarned || 0).toFixed(2)} cUSD`;
+
+    // Payment history
+    const payList = document.getElementById('payment-list');
+    if (data.payments && data.payments.length > 0) {
+      payList.innerHTML = data.payments.map(p => `
+        <div class="payment-item">
+          <div>
+            <div class="payment-topic">${(p.topic || 'General').replace(/_/g,' ')}</div>
+            <div class="payment-score">Score: ${p.score || '—'}/5 · ${timeAgo(p.timestamp)}</div>
+          </div>
+          <div class="payment-amount">+${parseFloat(p.amount || 0.10).toFixed(2)} cUSD</div>
+          <div class="payment-links">
+            ${p.celoscan ? `<a class="pill-link green" href="${p.celoscan}" target="_blank">CELOSCAN</a>` : ''}
+            ${p.raribleUrl ? `<a class="pill-link purple" href="${p.raribleUrl}" target="_blank">NFT</a>` : ''}
+            ${p.txHash && p.txHash !== 'pending' ? `<span class="payment-time">${p.txHash.slice(0,8)}...${p.txHash.slice(-4)}</span>` : ''}
+          </div>
+        </div>
+      `).join('');
+    } else {
+      payList.innerHTML = '<div class="empty-msg">NO PAYMENTS YET — PASS A QUIZ TO EARN</div>';
+    }
+
+    // NFT gallery
+    const gallery = document.getElementById('nft-gallery');
+    if (data.nfts && data.nfts.length > 0) {
+      gallery.innerHTML = data.nfts.map(nft => `
+        <div class="nft-mini">
+          <div class="nft-mini-art">
+            ${nft.imageUrl
+              ? `<img src="${nft.imageUrl}" alt="${nft.name}" loading="lazy"/>`
+              : `<div class="nft-mini-art-placeholder">ON CHAIN</div>`}
+          </div>
+          <div class="nft-mini-info">
+            <div class="nft-mini-name">${nft.name || `NFT #${nft.tokenId}`}</div>
+            <div class="nft-mini-topic">${(nft.topic || 'GENERAL').toUpperCase()}</div>
+            <div class="nft-mini-links">
+              ${nft.raribleUrl ? `<a class="pill-link purple" href="${nft.raribleUrl}" target="_blank">RARIBLE</a>` : ''}
+              ${nft.basescan ? `<a class="pill-link" href="${nft.basescan}" target="_blank">BASESCAN</a>` : ''}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    } else {
+      gallery.innerHTML = '<div class="empty-msg" style="grid-column:1/-1">NO NFTS YET — EARNED AUTOMATICALLY WHEN YOU PASS</div>';
+    }
+
+    // Update URL without reload
+    window.history.replaceState({}, '', `/dashboard?email=${encodeURIComponent(email)}`);
+  }
+</script>
+</body>
+</html>

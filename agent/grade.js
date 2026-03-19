@@ -11,7 +11,7 @@ async function gradeQuiz(studentAnswers, correctAnswers, quizDurationSeconds, to
   let score = 0;
   for (let i = 0; i < 5; i++) {
     if (studentAnswers[i] && correctAnswers[i] &&
-        studentAnswers[i].toUpperCase() === correctAnswers[i].toUpperCase()) {
+        String(studentAnswers[i]) === String(correctAnswers[i])) {
       score++;
     }
   }
@@ -33,7 +33,7 @@ async function gradeQuiz(studentAnswers, correctAnswers, quizDurationSeconds, to
   }
 
   const sequential = ["A", "B", "C", "D", "A"];
-  const isSequential = studentAnswers.every((a, i) => a.toUpperCase() === sequential[i]);
+  const isSequential = studentAnswers.every((a, i) => String(a) === String(sequential[i]));
   if (isSequential) {
     suspicious = true;
     suspiciousReason = "Sequential answer pattern — likely bot";

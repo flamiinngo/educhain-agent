@@ -744,7 +744,79 @@ app.get("/survival-status", async (req, res) => {
   }
 });
 
-// ─── GET /agent-log ───────────────────────────────────────────────────────────
+// ─── GET /dashboard-data ─────────────────────────────────────────────────────
+app.get("/dashboard-data", async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) return res.status(400).json({ error: "Email required" });
+
+    // Get wallet from Privy
+    let wallet = null;
+    try {
+      const privyResult = await getOrCreateStudentWallet(email);
+      wallet = privyResult.address;
+    } catch (e) {
+      return res.status(404).json({ error: "Student not found" });
+    }
+
+    // Get payments from memory for this wallet
+    const payments = memory.actions
+      .filter(a => a.type === "PAYMENT" && a.wallet === wallet)
+      .map(a => ({
+        topic: a.topic,
+        amount: a.amount || 0.10,
+        score: a.score,
+        txHash: a.txHash,
+        celoscan: a.txHash ? `https://celo-sepolia.celoscan.io/tx/${a.txHash}` : null,
+        raribleUrl: a.raribleUrl || null,
+        nftTokenId: a.nftTokenId || null,
+        timestamp: a.timestamp,
+      }))
+      .reverse();
+
+    // Get registration info
+    const registration = memory.actions
+      .find(a => a.type === "REGISTER" && a.contact === email);
+
+    const name = registration?.name || email.split('@')[0];
+    const totalEarned = payments.reduce((sum, p) => sum + parseFloat(p.amount || 0.10), 0);
+
+    // Calculate streak (days with at least one payment)
+    const days = new Set(payments.map(p => new Date(p.timestamp).toDateString()));
+    const streak = days.size;
+
+    // Get NFTs for this wallet from agent log
+    const nftMints = (getLog().nftMints || [])
+      .filter(n => n.studentWallet === wallet)
+      .map(n => ({
+        tokenId: n.tokenId,
+        name: `EduChain NFT #${n.tokenId}`,
+        topic: n.topic,
+        imageUrl: n.imageUrl,
+        raribleUrl: n.raribleUrl,
+        basescan: n.txHash ? `https://sepolia.basescan.org/tx/${n.txHash}` : null,
+      }));
+
+    res.json({
+      email,
+      name,
+      wallet,
+      totalEarned: totalEarned.toFixed(2),
+      lessonsCompleted: payments.length,
+      streak,
+      payments,
+      nfts: nftMints,
+      humanInvolved: false,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── GET /dashboard ───────────────────────────────────────────────────────────
+app.get("/dashboard", (req, res) => res.sendFile("dashboard.html", { root: "frontend" }));
+
+
 app.get("/agent-log", (req, res) => {
   const log = getLog();
   res.setHeader('Content-Disposition', 'attachment; filename="agent_log.json"');

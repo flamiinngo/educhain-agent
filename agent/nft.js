@@ -4,7 +4,7 @@
 // humanInvolved: false on every mint.
 
 import { ethers } from 'ethers';
-import { execFileSync } from 'child_process';
+import { spawnSync } from 'child_process';
 import { writeFileSync, unlinkSync, existsSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -13,7 +13,7 @@ import fetch from 'node-fetch';
 const AGENT_PRIVATE_KEY = process.env.AGENT_PRIVATE_KEY;
 const PINATA_JWT = process.env.PINATA_JWT;
 const RARE_CONTRACT = process.env.RARE_CONTRACT || '0x9c3be85309BC9d6D258cb3f571B979eC5DC6ecB9';
-const DIRECT_CONTRACT = process.env.IMPACT_NFT_ADDRESS || '0x14c5a01cE4FeF52fDc2C3B1c3761274ce37336DB';
+const DIRECT_CONTRACT = RARE_CONTRACT;
 const BASE_RPC = process.env.BASE_RPC_TESTNET || 'https://sepolia.base.org';
 
 // ─── Theme engine ─────────────────────────────────────────────────────────────
@@ -104,8 +104,8 @@ async function mintViaRareCLI({ svgContent, nftName, description, topic, grade, 
   const tmpFile = join(tmpdir(), `educhain-${Date.now()}.svg`);
   writeFileSync(tmpFile, svgContent, 'utf-8');
   try {
-    const output = execFileSync('npx', [
-      '--yes', '@rareprotocol/rare-cli', 'mint',
+    const args = [
+      '@rareprotocol/rare-cli', 'mint',
       '--contract', RARE_CONTRACT,
       '--name', nftName,
       '--description', description,
@@ -116,12 +116,26 @@ async function mintViaRareCLI({ svgContent, nftName, description, topic, grade, 
       '--attribute', `grade=${grade||'Unknown'}`,
       '--attribute', `score=${score||0}`,
       '--attribute', `humanInvolved=false`,
-    ], { encoding: 'utf-8', timeout: 120000, env: { ...process.env } });
+    ];
+
+    const result = spawnSync('npx', args, {
+      encoding: 'utf-8',
+      timeout: 120000,
+      shell: true,
+      env: { ...process.env },
+    });
+
+    if (result.error) throw result.error;
+    if (result.status !== 0) throw new Error(result.stderr || `Exit code ${result.status}`);
+
+    const output = result.stdout + (result.stderr || '');
 
     const tokenId  = output.match(/Token ID:\s*(\d+)/)?.[1] || null;
     const txHash   = output.match(/Transaction sent:\s*(0x[a-fA-F0-9]+)/)?.[1] || null;
     const metaCID  = output.match(/Metadata pinned:\s*ipfs:\/\/(\S+)/)?.[1] || null;
     const imageCID = output.match(/Upload complete:\s*ipfs:\/\/(\S+)/)?.[1] || null;
+
+    if (!txHash) throw new Error('No transaction hash in CLI output');
 
     console.log(`[NFT] Rare Protocol mint: Token #${tokenId} TX: ${txHash}`);
     return {
@@ -143,7 +157,10 @@ async function mintViaRareCLI({ svgContent, nftName, description, topic, grade, 
 // ─── Fallback: Pinata + direct contract ──────────────────────────────────────
 
 async function mintDirectFallback({ svgContent, nftName, description, topic, grade, score, theme, studentWallet }) {
-  const NFT_ABI = ['function mint(address to, string memory tokenURI) public returns (uint256)'];
+  const NFT_ABI = [
+    'function mint(address to, string memory tokenURI) public returns (uint256)',
+    'function mintTo(address to, string memory tokenURI) public returns (uint256)',
+  ];
   let imageCID = null, metaCID = null;
 
   try {
@@ -166,7 +183,13 @@ async function mintDirectFallback({ svgContent, nftName, description, topic, gra
   const wallet = new ethers.Wallet(AGENT_PRIVATE_KEY, provider);
   const contract = new ethers.Contract(DIRECT_CONTRACT, NFT_ABI, wallet);
   const tokenURI = metaCID ? `ipfs://${metaCID}` : `data:application/json,${encodeURIComponent(JSON.stringify({name:nftName}))}`;
-  const tx = await contract.mint(studentWallet || process.env.AGENT_ADDRESS, tokenURI);
+  const target = studentWallet || process.env.AGENT_ADDRESS;
+  let tx;
+  try {
+    tx = await contract.mint(target, tokenURI);
+  } catch (e) {
+    tx = await contract.mintTo(target, tokenURI);
+  }
   const receipt = await tx.wait();
   const log = receipt.logs.find(l=>l.topics[0]===ethers.id('Transfer(address,address,uint256)'));
   const tokenId = log ? parseInt(log.topics[3],16) : null;
