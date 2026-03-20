@@ -55,7 +55,7 @@ async function storeOnFilecoin(lessonData) {
       return {
         success: true,
         filecoinCID: cid,
-        ipfsGateway: `https://ipfs.io/ipfs/${cid}`,
+        ipfsGateway: `https://gateway.pinata.cloud/ipfs/${cid}`,
         storedBy: "pinata",
         humanInvolved: false
       };
@@ -77,7 +77,7 @@ async function storeOnFilecoin(lessonData) {
   return {
     success: true,
     filecoinCID: mockCID,
-    ipfsGateway: `https://ipfs.io/ipfs/${mockCID}`,
+    ipfsGateway: `https://gateway.pinata.cloud/ipfs/${mockCID}`,
     storedBy: "pinata",
     mode: "mock",
     humanInvolved: false
