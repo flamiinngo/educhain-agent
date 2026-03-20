@@ -485,7 +485,7 @@ app.post("/submit-quiz", async (req, res) => {
           amount: `${gradeResult.reward} cUSD`,
           to: payWallet,
           txHash: paymentResult.txHash,
-          network: "Celo Sepolia",
+          network: "Celo Mainnet",
           celoscan: `https://celoscan.io/tx/${paymentResult.txHash}`,
           explorer: `https://celoscan.io/tx/${paymentResult.txHash}`
         };
@@ -514,7 +514,7 @@ app.post("/submit-quiz", async (req, res) => {
           amount: `${gradeResult.reward} cUSD`,
           to: payWallet,
           txHash: "pending",
-          network: "Celo Sepolia",
+          network: "Celo Mainnet",
           note: "Payment queued — will process when on-chain conditions are met"
         };
         response.txHash = "pending";
@@ -645,7 +645,7 @@ app.post("/demo", async (req, res) => {
         lesson: { topic, content: lessonData.lesson, generatedBy: "venice-ai", model: "llama-3.3-70b", humanInvolved: false },
         quiz: { questions: lessonData.quiz, generatedBy: "venice-ai", humanInvolved: false },
         grade: { score: gradeResult.score, outOf: 5, passed: gradeResult.passed, gradedBy: "ai", humanInvolved: false },
-        payment: { amount: `${gradeResult.reward} cUSD`, tx: paymentResult.txHash, celoscan: `https://celoscan.io/tx/${paymentResult.txHash}`, network: "celo-sepolia", humanInvolved: false },
+        payment: { amount: `${gradeResult.reward} cUSD`, tx: paymentResult.txHash, celoscan: `https://celoscan.io/tx/${paymentResult.txHash}`, network: "celo-mainnet", humanInvolved: false },
         storage: { filecoinCID: storageResult.filecoinCID, ipfsGateway: storageResult.ipfsGateway, humanInvolved: false },
         nft: { tokenId: nftResult.tokenId, mintTx: nftResult.txHash || nftResult.mintTx || "pending", theme: nftResult.theme, rarible: nftResult.raribleUrl, image: nftResult.imageUrl, humanInvolved: false }
       },
@@ -802,7 +802,7 @@ app.get("/dashboard-data", async (req, res) => {
         topic: n.topic,
         imageUrl: n.imageUrl,
         raribleUrl: n.raribleUrl,
-        basescan: n.txHash ? `https://sepolia.basescan.org/tx/${n.txHash}` : null,
+        basescan: n.txHash ? `https://celoscan.io/tx/${n.txHash}` : null,
       }));
 
     res.json({

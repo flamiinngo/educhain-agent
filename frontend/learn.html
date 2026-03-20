@@ -487,7 +487,7 @@
         </div>
         <div class="proof-value">
           humanInvolved: <span style="color:var(--green)">false</span><br/>
-          network: celo mainnet + base sepolia<br/>
+          network: celo mainnet + base mainnet<br/>
           ai: venice / llama-3.3-70b
         </div>
         <div class="proof-links">
@@ -511,7 +511,7 @@
 
 <!-- Status bar -->
 <div class="status-bar">
-  <span><span class="status-dot"></span>AGENT ONLINE · CELO MAINNET + BASE SEPOLIA</span>
+  <span><span class="status-dot"></span>AGENT ONLINE · CELO MAINNET + BASE MAINNET</span>
   <span>humanInvolved: false</span>
 </div>
 
@@ -748,7 +748,7 @@
     } else if (data.mintTx || data.nftTx) {
       const txHash = data.mintTx || data.nftTx;
       document.getElementById('nft-hash').textContent = txHash;
-      document.getElementById('basescan-link').href = `https://sepolia.basescan.org/tx/${txHash}`;
+      document.getElementById('basescan-link').href = `https://celoscan.io/tx/${txHash}`;
       document.getElementById('nft-card').style.display = 'block';
     }
 

@@ -14,7 +14,7 @@ const AGENT_PRIVATE_KEY = process.env.AGENT_PRIVATE_KEY;
 const PINATA_JWT = process.env.PINATA_JWT;
 const RARE_CONTRACT = process.env.RARE_CONTRACT || '0x9c3be85309BC9d6D258cb3f571B979eC5DC6ecB9';
 const DIRECT_CONTRACT = process.env.IMPACT_NFT_ADDRESS || '0x94788e099CC76b21267E5458522Ebb6147A4A477';
-const BASE_RPC = process.env.BASE_RPC_TESTNET || 'https://sepolia.base.org';
+const BASE_RPC = process.env.CELO_RPC || 'https://forno.celo.org';
 
 // ─── Theme engine ─────────────────────────────────────────────────────────────
 
@@ -110,7 +110,7 @@ async function mintViaRareCLI({ svgContent, nftName, description, topic, grade, 
       '--name', nftName,
       '--description', description,
       '--image', tmpFile,
-      '--chain', 'base-sepolia', '--royalty-receiver', process.env.AGENT_ADDRESS,
+      '--chain', 'celo', '--royalty-receiver', process.env.AGENT_ADDRESS,
       '--to', walletAddress || process.env.AGENT_ADDRESS,
       '--attribute', `topic=${topic||'General'}`,
       '--attribute', `grade=${grade||'Unknown'}`,
@@ -140,9 +140,9 @@ async function mintViaRareCLI({ svgContent, nftName, description, topic, grade, 
     console.log(`[NFT] Rare Protocol mint: Token #${tokenId} TX: ${txHash}`);
     return { tokenId, txHash, metaCID, imageCID, svgContent,
       nftName, theme: getTheme(topic).name,
-      basescan:        txHash   ? `https://sepolia.basescan.org/tx/${txHash}` : null,
+      basescan:        txHash   ? `https://celoscan.io/tx/${txHash}` : null,
       raribleUrl:      tokenId  ? `https://testnet.rarible.com/token/base/${RARE_CONTRACT}:${tokenId}` : null,
-      openseaUrl:      tokenId  ? `https://testnets.opensea.io/assets/base-sepolia/${RARE_CONTRACT}/${tokenId}` : null,
+      openseaUrl:      tokenId  ? `https://tofunft.com/nft/celo/${RARE_CONTRACT}/${tokenId}` : null,
       imageUrl:        imageCID ? `https://superrare.myfilebase.com/ipfs/${imageCID}` : null,
       metaUrl:         metaCID  ? `https://superrare.myfilebase.com/ipfs/${metaCID}` : null,
       filecoinGateway: imageCID ? `https://superrare.myfilebase.com/ipfs/${imageCID}` : null,
@@ -177,7 +177,7 @@ async function mintDirectFallback({ svgContent, nftName, description, topic, gra
     const r2json = await r2.json(); console.log(`[NFT] Pinata meta pin:`, JSON.stringify(r2json).slice(0,120)); metaCID = r2json.IpfsHash;
   } catch(e) { console.log(`[NFT] Pinata error: ${e.message}`); }
 
-  const provider = new ethers.JsonRpcProvider(BASE_RPC);
+  const provider = new ethers.JsonRpcProvider(process.env.CELO_RPC || 'https://forno.celo.org');
   const wallet = new ethers.Wallet(AGENT_PRIVATE_KEY, provider);
   const contract = new ethers.Contract(DIRECT_CONTRACT, NFT_ABI, wallet);
   const tokenURI = metaCID ? `ipfs://${metaCID}` : `data:application/json,${encodeURIComponent(JSON.stringify({name:nftName}))}`;
@@ -188,9 +188,9 @@ async function mintDirectFallback({ svgContent, nftName, description, topic, gra
   const tokenId = log ? parseInt(log.topics[3],16) : null;
 
   return { txHash: receipt.hash, mintTx: receipt.hash, tokenId, imageCID, metaCID, nftName, svgContent, theme: theme.name,
-    basescan:        `https://sepolia.basescan.org/tx/${receipt.hash}`,
-    raribleUrl:      tokenId ? `https://testnet.rarible.com/token/base/${DIRECT_CONTRACT}:${tokenId}` : null,
-    openseaUrl:      tokenId ? `https://testnets.opensea.io/assets/base-sepolia/${DIRECT_CONTRACT}/${tokenId}` : null,
+    basescan:        `https://celoscan.io/tx/${receipt.hash}`,
+    raribleUrl:      tokenId ? `https://rarible.com/token/celo/${DIRECT_CONTRACT}:${tokenId}` : null,
+    openseaUrl:      tokenId ? `https://tofunft.com/nft/celo/${DIRECT_CONTRACT}/${tokenId}` : null,
     imageUrl:        imageCID ? `https://jade-eligible-chicken-571.mypinata.cloud/ipfs/${imageCID}` : null,
     metaUrl:         metaCID  ? `https://jade-eligible-chicken-571.mypinata.cloud/ipfs/${metaCID}` : null,
     filecoinGateway: imageCID ? `https://jade-eligible-chicken-571.mypinata.cloud/ipfs/${imageCID}` : null,
@@ -224,7 +224,7 @@ export async function mintImpactNFT({ studentName, studentWallet, topic, grade, 
 
 export async function getAllNFTs() {
   try {
-    const provider = new ethers.JsonRpcProvider(BASE_RPC);
+    const provider = new ethers.JsonRpcProvider(process.env.CELO_RPC || 'https://forno.celo.org');
     const abi = [
       'function totalSupply() public view returns (uint256)',
       'function tokenURI(uint256 tokenId) public view returns (string memory)',
@@ -255,7 +255,7 @@ export async function getAllNFTs() {
               imageUrl:   imageCID ? c.gw + imageCID : null,
               filecoinCID: imageCID,
               raribleUrl: `https://testnet.rarible.com/token/base/${c.address}:${i}`,
-              openseaUrl: `https://testnets.opensea.io/assets/base-sepolia/${c.address}/${i}`,
+              openseaUrl: `https://tofunft.com/nft/celo/${c.address}/${i}`,
               humanInvolved: false,
             });
           } catch(e) {}

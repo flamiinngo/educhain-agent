@@ -37,7 +37,7 @@ const CUSD_ABI = [
   "function mint(address to, uint256 amount) external"
 ];
 
-// ─── BASE SEPOLIA PROVIDERS ───
+// ─── CELO MAINNET PROVIDERS ───
 function getProvider() {
   return new ethers.JsonRpcProvider(BASE_RPC);
 }
@@ -54,7 +54,7 @@ function getCUSDContract() {
   return new ethers.Contract(BASE_MOCK_CUSD_ADDRESS, CUSD_ABI, getSigner());
 }
 
-// ─── CELO SEPOLIA PROVIDERS ───
+// ─── CELO MAINNET PROVIDERS ───
 function getCeloProvider() {
   return new ethers.JsonRpcProvider(CELO_RPC);
 }
@@ -71,7 +71,7 @@ function getCeloCUSDContract() {
   return new ethers.Contract(CELO_MOCK_CUSD_ADDRESS, CUSD_ABI, getCeloSigner());
 }
 
-// ─── REGISTER STUDENT (Base Sepolia) ───
+// ─── REGISTER STUDENT (Celo Mainnet) ───
 async function registerStudent(walletAddress, phoneOrEmail) {
   console.log(`[PAY] Registering student: ${walletAddress}`);
 
@@ -94,12 +94,12 @@ async function registerStudent(walletAddress, phoneOrEmail) {
   return {
     success: true,
     txHash: receipt.hash,
-    basescan: `https://sepolia.basescan.org/tx/${receipt.hash}`,
+    basescan: `https://celoscan.io/tx/${receipt.hash}`,
     humanInvolved: false
   };
 }
 
-// ─── VERIFY STUDENT (Base Sepolia) ───
+// ─── VERIFY STUDENT (Celo Mainnet) ───
 async function verifyStudent(walletAddress) {
   console.log(`[PAY] Verifying student: ${walletAddress}`);
 
@@ -119,7 +119,7 @@ async function verifyStudent(walletAddress) {
   return {
     success: true,
     txHash: receipt.hash,
-    basescan: `https://sepolia.basescan.org/tx/${receipt.hash}`,
+    basescan: `https://celoscan.io/tx/${receipt.hash}`,
     humanInvolved: false
   };
 }
@@ -127,7 +127,7 @@ async function verifyStudent(walletAddress) {
 // ─── PAY STUDENT (Celo Sepolia — real cUSD) ───
 async function payStudent(walletAddress, score, topic, filecoinCID, quizStartTimestamp) {
   console.log(`[PAY] Paying student: ${walletAddress} | Score: ${score}/5`);
-  console.log(`[PAY] Network: Celo Sepolia | Contract: ${CELO_CONTRACT_ADDRESS}`);
+  console.log(`[PAY] Network: Celo Mainnet | Contract: ${CELO_CONTRACT_ADDRESS}`);
 
   const contract = getCeloEduChainContract();
   const quizStartTime = Math.floor(new Date(quizStartTimestamp).getTime() / 1000);
@@ -152,7 +152,7 @@ async function payStudent(walletAddress, score, topic, filecoinCID, quizStartTim
     amount: reward,
     score: score,
     topic: topic,
-    network: "celo-sepolia"
+    network: "celo-mainnet"
   });
 
   memory.metrics.paymentsReleased++;
@@ -165,12 +165,12 @@ async function payStudent(walletAddress, score, topic, filecoinCID, quizStartTim
     amount: `${reward} cUSD`,
     txHash: receipt.hash,
     celoscan: `https://celoscan.io/tx/${receipt.hash}`,
-    network: "celo-sepolia",
+    network: "celo-mainnet",
     humanInvolved: false
   };
 }
 
-// ─── BLACKLIST STUDENT (Base Sepolia) ───
+// ─── BLACKLIST STUDENT (Celo Mainnet) ───
 async function blacklistStudent(walletAddress, reason) {
   console.log(`[PAY] Blacklisting student: ${walletAddress}`);
 
@@ -191,7 +191,7 @@ async function blacklistStudent(walletAddress, reason) {
   return {
     success: true,
     txHash: receipt.hash,
-    basescan: `https://sepolia.basescan.org/tx/${receipt.hash}`,
+    basescan: `https://celoscan.io/tx/${receipt.hash}`,
     humanInvolved: false
   };
 }
@@ -211,7 +211,7 @@ async function getContractStats() {
       runwayDays: Number(stats[4]),
       survivalMode: stats[5],
       survivalActivations: Number(stats[6]),
-      network: "celo-sepolia"
+      network: "celo-mainnet"
     };
   } catch (err) {
     console.log(`[PAY] Celo stats failed, trying Base: ${err.message}`);
@@ -226,7 +226,7 @@ async function getContractStats() {
       runwayDays: Number(stats[4]),
       survivalMode: stats[5],
       survivalActivations: Number(stats[6]),
-      network: "base-sepolia"
+      network: "celo-mainnet"
     };
   }
 }
