@@ -185,7 +185,7 @@ async function mintDirectFallback({ svgContent, nftName, description, topic, gra
   const target = studentWallet || process.env.AGENT_ADDRESS;
   let tx = await contract.mint(target, topic||'General', score||0, ethers.parseEther('0.10'), imageCID||'pending', 'pending');
   const receipt = await tx.wait();
-  const log = receipt.logs.find(l=>l.topics[0]===ethers.id('Transfer(address,address,uint256)'));
+  const log = receipt.logs.find(l=>l.topics && l.topics.length>=4 && l.topics[0]===ethers.id('Transfer(address,address,uint256)'));
   const tokenId = log ? parseInt(log.topics[3],16) : null;
 
   return {
