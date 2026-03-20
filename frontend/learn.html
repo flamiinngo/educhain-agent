@@ -408,7 +408,7 @@
       </div>
       <div class="step-line" id="step-nft">
         <div class="step-dot"></div>
-        <span>Minting impact NFT on Base...</span>
+        <span>Minting impact NFT on Celo...</span>
       </div>
     </div>
   </div>
@@ -455,14 +455,12 @@
       <!-- NFT on-chain -->
       <div class="proof-card" id="nft-card" style="display:none;">
         <div class="proof-card-label">
-          <span class="proof-dot base"></span>
-          <span style="color:var(--base)">CELO NFT MINT</span>
+          <span class="proof-dot celo"></span>
+          <span style="color:var(--celo)">CELO NFT MINT</span>
         </div>
         <div class="proof-value" id="nft-hash">—</div>
         <div class="proof-links">
           <a class="proof-link" id="CELOSCAN-link" href="#" target="_blank">CELOSCAN</a>
-          <a class="proof-link" id="rarible-link" href="#" target="_blank" style="display:none">RARIBLE</a>
-          <a class="proof-link" id="opensea-link" href="#" target="_blank" style="display:none">OPENSEA</a>
         </div>
       </div>
 
@@ -720,17 +718,6 @@
       const n = data.nft;
       document.getElementById('nft-hash').textContent = n.txHash || '—';
       document.getElementById('CELOSCAN-link').href = n.CELOSCAN || '#';
-
-      if (n.rarible) {
-        const rl = document.getElementById('rarible-link');
-        rl.href = n.rarible;
-        rl.style.display = 'inline-block';
-      }
-      if (n.opensea) {
-        const ol = document.getElementById('opensea-link');
-        ol.href = n.opensea;
-        ol.style.display = 'inline-block';
-      }
 
       // NFT preview
       if (n.svg) { const img = document.getElementById('nft-art-img'); img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(n.svg); } else if (n.image) { document.getElementById('nft-art-img').src = n.image;
