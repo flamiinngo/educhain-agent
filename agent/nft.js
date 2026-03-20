@@ -191,9 +191,9 @@ async function mintDirectFallback({ svgContent, nftName, description, topic, gra
     basescan:        `https://sepolia.basescan.org/tx/${receipt.hash}`,
     raribleUrl:      tokenId ? `https://testnet.rarible.com/token/base/${DIRECT_CONTRACT}:${tokenId}` : null,
     openseaUrl:      tokenId ? `https://testnets.opensea.io/assets/base-sepolia/${DIRECT_CONTRACT}/${tokenId}` : null,
-    imageUrl:        imageCID ? `https://ipfs.io/ipfs/${imageCID}` : null,
-    metaUrl:         metaCID  ? `https://ipfs.io/ipfs/${metaCID}`  : null,
-    filecoinGateway: imageCID ? `https://ipfs.io/ipfs/${imageCID}` : null,
+    imageUrl:        imageCID ? `https://jade-eligible-chicken-571.mypinata.cloud/ipfs/${imageCID}` : null,
+    metaUrl:         metaCID  ? `https://jade-eligible-chicken-571.mypinata.cloud/ipfs/${metaCID}` : null,
+    filecoinGateway: imageCID ? `https://jade-eligible-chicken-571.mypinata.cloud/ipfs/${imageCID}` : null,
     protocol: 'direct', humanInvolved: false,
   };
 }
@@ -231,7 +231,7 @@ export async function getAllNFTs() {
     ];
     const contracts = [
       { address: RARE_CONTRACT,    label: 'rare',   gw: 'https://superrare.myfilebase.com/ipfs/' },
-      { address: DIRECT_CONTRACT,  label: 'direct', gw: 'https://ipfs.io/ipfs/' },
+      { address: DIRECT_CONTRACT,  label: 'direct', gw: 'https://jade-eligible-chicken-571.mypinata.cloud/ipfs/' },
     ];
     let allNFTs = [];
     for (const c of contracts) {
