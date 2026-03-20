@@ -540,9 +540,7 @@ app.post("/submit-quiz", async (req, res) => {
           tokenId: nftResult.tokenId,
           txHash: nftResult.txHash,
           basescan: nftResult.basescan,
-          rarible: nftResult.raribleUrl,
-          opensea: nftResult.openseaUrl,
-          image: nftResult.imageUrl,
+          rarible: nftResult.raribleUrl, opensea: nftResult.openseaUrl, image: nftResult.imageUrl, svg: nftResult.svgContent,
           metadata: nftResult.metaUrl
         };
         // Legacy flat fields

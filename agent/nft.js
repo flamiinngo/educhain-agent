@@ -138,8 +138,7 @@ async function mintViaRareCLI({ svgContent, nftName, description, topic, grade, 
     if (!txHash && result.status !== 0) throw new Error('CLI failed: ' + (result.stderr || '').slice(0,100));
 
     console.log(`[NFT] Rare Protocol mint: Token #${tokenId} TX: ${txHash}`);
-    return {
-      tokenId, txHash, metaCID, imageCID,
+    return { tokenId, txHash, metaCID, imageCID, svgContent,
       nftName, theme: getTheme(topic).name,
       basescan:        txHash   ? `https://sepolia.basescan.org/tx/${txHash}` : null,
       raribleUrl:      tokenId  ? `https://testnet.rarible.com/token/base/${RARE_CONTRACT}:${tokenId}` : null,
@@ -188,9 +187,7 @@ async function mintDirectFallback({ svgContent, nftName, description, topic, gra
   const log = receipt.logs.find(l=>l.topics && l.topics.length>=4 && l.topics[0]===ethers.id('Transfer(address,address,uint256)'));
   const tokenId = log ? parseInt(log.topics[3],16) : null;
 
-  return {
-    txHash: receipt.hash, mintTx: receipt.hash, tokenId,
-    imageCID, metaCID, nftName, theme: theme.name,
+  return { txHash: receipt.hash, mintTx: receipt.hash, tokenId, imageCID, metaCID, nftName, svgContent, theme: theme.name,
     basescan:        `https://sepolia.basescan.org/tx/${receipt.hash}`,
     raribleUrl:      tokenId ? `https://testnet.rarible.com/token/base/${DIRECT_CONTRACT}:${tokenId}` : null,
     openseaUrl:      tokenId ? `https://testnets.opensea.io/assets/base-sepolia/${DIRECT_CONTRACT}/${tokenId}` : null,

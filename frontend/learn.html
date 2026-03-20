@@ -733,8 +733,7 @@
       }
 
       // NFT preview
-      if (n.image) {
-        document.getElementById('nft-art-img').src = n.image;
+      if (n.svg) { const img = document.getElementById('nft-art-img'); img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(n.svg); } else if (n.image) { document.getElementById('nft-art-img').src = n.image;
         document.getElementById('nft-name-label').textContent = n.name || 'Impact NFT';
         document.getElementById('nft-theme-label').textContent = n.theme ? `Art style: ${n.theme}` : '';
         if (n.rarible) {
