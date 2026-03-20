@@ -456,11 +456,11 @@
       <div class="proof-card" id="nft-card" style="display:none;">
         <div class="proof-card-label">
           <span class="proof-dot base"></span>
-          <span style="color:var(--base)">BASE NFT MINT</span>
+          <span style="color:var(--base)">CELO NFT MINT</span>
         </div>
         <div class="proof-value" id="nft-hash">—</div>
         <div class="proof-links">
-          <a class="proof-link" id="basescan-link" href="#" target="_blank">BASESCAN</a>
+          <a class="proof-link" id="CELOSCAN-link" href="#" target="_blank">CELOSCAN</a>
           <a class="proof-link" id="rarible-link" href="#" target="_blank" style="display:none">RARIBLE</a>
           <a class="proof-link" id="opensea-link" href="#" target="_blank" style="display:none">OPENSEA</a>
         </div>
@@ -487,7 +487,7 @@
         </div>
         <div class="proof-value">
           humanInvolved: <span style="color:var(--green)">false</span><br/>
-          network: celo mainnet + base mainnet<br/>
+          network: celo mainnet + celo mainnet<br/>
           ai: venice / llama-3.3-70b
         </div>
         <div class="proof-links">
@@ -511,7 +511,7 @@
 
 <!-- Status bar -->
 <div class="status-bar">
-  <span><span class="status-dot"></span>AGENT ONLINE · CELO MAINNET + BASE MAINNET</span>
+  <span><span class="status-dot"></span>AGENT ONLINE · CELO MAINNET + celo mainnet</span>
   <span>humanInvolved: false</span>
 </div>
 
@@ -719,7 +719,7 @@
     if (data.nft) {
       const n = data.nft;
       document.getElementById('nft-hash').textContent = n.txHash || '—';
-      document.getElementById('basescan-link').href = n.basescan || '#';
+      document.getElementById('CELOSCAN-link').href = n.CELOSCAN || '#';
 
       if (n.rarible) {
         const rl = document.getElementById('rarible-link');
@@ -748,7 +748,7 @@
     } else if (data.mintTx || data.nftTx) {
       const txHash = data.mintTx || data.nftTx;
       document.getElementById('nft-hash').textContent = txHash;
-      document.getElementById('basescan-link').href = `https://celoscan.io/tx/${txHash}`;
+      document.getElementById('CELOSCAN-link').href = `https://celoscan.io/tx/${txHash}`;
       document.getElementById('nft-card').style.display = 'block';
     }
 
