@@ -166,7 +166,7 @@ async function mintDirectFallback({ svgContent, nftName, description, topic, gra
     fd.append('file', new Blob([Buffer.from(svgContent,'utf-8')], {type:'image/svg+xml'}), nftName.replace(/\W/g,'_')+'.svg');
     fd.append('pinataMetadata', JSON.stringify({name:nftName}));
     const r1 = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {method:'POST',headers:{Authorization:`Bearer ${PINATA_JWT}`},body:fd});
-    imageCID = (await r1.json()).IpfsHash;
+    const r1json = await r1.json(); console.log(`[NFT] Pinata image pin:`, JSON.stringify(r1json).slice(0,120)); imageCID = r1json.IpfsHash;
 
     const meta = { name:nftName, description, image:`ipfs://${imageCID}`, attributes:[
       {trait_type:'Topic',value:topic||'General'},{trait_type:'Art Style',value:theme.name},
@@ -174,7 +174,7 @@ async function mintDirectFallback({ svgContent, nftName, description, topic, gra
       {trait_type:'Human Involved',value:'false'}
     ]};
     const r2 = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {method:'POST',headers:{Authorization:`Bearer ${PINATA_JWT}`,'Content-Type':'application/json'},body:JSON.stringify({pinataContent:meta,pinataMetadata:{name:nftName}})});
-    metaCID = (await r2.json()).IpfsHash;
+    const r2json = await r2.json(); console.log(`[NFT] Pinata meta pin:`, JSON.stringify(r2json).slice(0,120)); metaCID = r2json.IpfsHash;
   } catch(e) { console.log(`[NFT] Pinata error: ${e.message}`); }
 
   const provider = new ethers.JsonRpcProvider(BASE_RPC);

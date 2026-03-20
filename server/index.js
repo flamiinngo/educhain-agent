@@ -465,7 +465,7 @@ app.post("/submit-quiz", async (req, res) => {
           imageCID: filecoinCID,
           metaCID: filecoinCID,
           gateway: storageResult.ipfsGateway,
-          ipfsUrl: `https://ipfs.io/ipfs/${filecoinCID}`
+          ipfsUrl: `https://gateway.pinata.cloud/ipfs/${filecoinCID}`
         };
         logFilecoinStore({ cid: filecoinCID, contentType: 'lesson-proof', ipfsUrl: storageResult.ipfsGateway });
       }
@@ -554,7 +554,7 @@ app.post("/submit-quiz", async (req, res) => {
             imageCID: nftResult.imageCID,
             metaCID: nftResult.metaCID,
             gateway: nftResult.filecoinGateway,
-            ipfsUrl: `https://ipfs.io/ipfs/${nftResult.imageCID}`
+            ipfsUrl: `https://gateway.pinata.cloud/ipfs/${nftResult.imageCID}`
           };
         }
 
