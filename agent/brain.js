@@ -407,7 +407,7 @@ async function executeDecision(decision, stats, state) {
 
         let proof = "";
         if (raribleUrl) proof = `\n\nImpact NFT: ${raribleUrl}`;
-        else if (txHash) proof = `\n\nPayment TX: https://celo-sepolia.celoscan.io/tx/${txHash}`;
+        else if (txHash) proof = `\n\nPayment TX: https://celoscan.io/tx/${txHash}`;
 
         const content = await generateThought(
           `A student just proved they understood "${topic}". They were immediately rewarded — no delay, no middleman, no human approval needed. What do you want to say about this moment?`

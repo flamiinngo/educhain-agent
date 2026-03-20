@@ -90,7 +90,7 @@ export async function fundTreasuryFromNFTSale(amountCUSD, buyerAddress) {
     return {
       success: true,
       txHash: receipt.hash,
-      celoscan: `https://celo-sepolia.celoscan.io/tx/${receipt.hash}`,
+      celoscan: `https://celoscan.io/tx/${receipt.hash}`,
       amountFunded: amountCUSD,
     };
 

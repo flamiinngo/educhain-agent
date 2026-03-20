@@ -711,7 +711,7 @@
     } else if (data.txHash) {
       // legacy flat response
       document.getElementById('payment-hash').textContent = data.txHash;
-      document.getElementById('celoscan-link').href = `https://celo-sepolia.celoscan.io/tx/${data.txHash}`;
+      document.getElementById('celoscan-link').href = `https://celoscan.io/tx/${data.txHash}`;
       document.getElementById('payment-card').style.display = 'block';
     }
 

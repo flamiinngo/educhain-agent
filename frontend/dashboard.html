@@ -273,7 +273,7 @@
     document.getElementById('dash-total').textContent = parseFloat(data.totalEarned || 0).toFixed(2);
 
     if (data.wallet) {
-      document.getElementById('celoscan-wallet-link').href = `https://celo-sepolia.celoscan.io/address/${data.wallet}`;
+      document.getElementById('celoscan-wallet-link').href = `https://celoscan.io/address/${data.wallet}`;
     }
 
     // Stats
