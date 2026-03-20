@@ -26,6 +26,11 @@ module.exports = {
       accounts: [AGENT_PRIVATE_KEY],
       chainId: 44787
     },
+    celoMainnet: {
+      url: 'https://forno.celo.org',
+      accounts: [AGENT_PRIVATE_KEY],
+      chainId: 42220
+    },
     celoSepolia: {
       url: "https://celo-sepolia.drpc.org",
       accounts: [AGENT_PRIVATE_KEY],

@@ -214,7 +214,7 @@ app.get("/proof", async (req, res) => {
       statement: `EduChain has operated for ${memory.getUptimeHours()} hours with zero human actions recorded.`,
       verification: {
         contractAddress: CONTRACT_ADDRESS,
-        basescan: `https://sepolia.basescan.org/address/${CONTRACT_ADDRESS}`,
+        basescan: `https://celoscan.io/address/${CONTRACT_ADDRESS}`,
         recentPayments
       },
       actionLog: memory.getRecentActions(10),
