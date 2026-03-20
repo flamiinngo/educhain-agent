@@ -69,6 +69,28 @@
       "network": "Celo Sepolia",
       "celoscan": "https://celo-sepolia.celoscan.io/tx/0xe2f622e2502b0e21cbf2ab90418224b5f191e7ec216327a3904a0d00e1ee086b",
       "humanInvolved": false
+    },
+    {
+      "timestamp": "2026-03-19T20:58:48.504Z",
+      "txHash": "0x661aa8c3375a0bee96f0b989f92df8974fe7c33ab86270d06ef6af08411ea49e",
+      "amount": 0.5,
+      "to": "0x25902c102BD25Fc43B9b5a3dF93d035c3CFC60ad",
+      "topic": "Writing Clear Paragraphs",
+      "score": 5,
+      "network": "Celo Sepolia",
+      "celoscan": "https://celo-sepolia.celoscan.io/tx/0x661aa8c3375a0bee96f0b989f92df8974fe7c33ab86270d06ef6af08411ea49e",
+      "humanInvolved": false
+    },
+    {
+      "timestamp": "2026-03-20T12:57:34.892Z",
+      "txHash": "0xf0e889c56d7697730a703b10150c88cb7ebae852b0f5497bb0a9127af9ef71fd",
+      "amount": 0.5,
+      "to": "0x39997B131403a99d8c4EC5B609a836baba3ed427",
+      "topic": "The Human Body Systems",
+      "score": 5,
+      "network": "Celo Sepolia",
+      "celoscan": "https://celo-sepolia.celoscan.io/tx/0xf0e889c56d7697730a703b10150c88cb7ebae852b0f5497bb0a9127af9ef71fd",
+      "humanInvolved": false
     }
   ],
   "nftMints": [
@@ -107,6 +129,30 @@
       "raribleUrl": "https://testnet.rarible.com/token/base/0x9c3be85309BC9d6D258cb3f571B979eC5DC6ecB9:5",
       "basescan": "https://sepolia.basescan.org/tx/0x8a33057d1864fedc4fd5693353edfaa495a0b14d9524a734efd4257b78a37c1b",
       "humanInvolved": false
+    },
+    {
+      "timestamp": "2026-03-19T20:59:16.977Z",
+      "txHash": "0x59356505ca4b34881db0ab69bfc87d44ca8c97f5044471d32057a30247fdaf42",
+      "tokenId": "6",
+      "topic": "Writing Clear Paragraphs",
+      "theme": "Cosmic Signal",
+      "studentWallet": "0x25902c102BD25Fc43B9b5a3dF93d035c3CFC60ad",
+      "imageUrl": "https://superrare.myfilebase.com/ipfs/QmeKKpqj6zNCVKeAtpjbuNhwpjXRkL8UBVdLP4vrgpxy8L",
+      "raribleUrl": "https://testnet.rarible.com/token/base/0x9c3be85309BC9d6D258cb3f571B979eC5DC6ecB9:6",
+      "basescan": "https://sepolia.basescan.org/tx/0x59356505ca4b34881db0ab69bfc87d44ca8c97f5044471d32057a30247fdaf42",
+      "humanInvolved": false
+    },
+    {
+      "timestamp": "2026-03-20T12:58:05.319Z",
+      "txHash": "0x5ed6e211f7f9d582924d49150aecdb0130ce2ffc24a165cfc8951fad23bc56dc",
+      "tokenId": "7",
+      "topic": "The Human Body Systems",
+      "theme": "Cosmic Signal",
+      "studentWallet": "0x39997B131403a99d8c4EC5B609a836baba3ed427",
+      "imageUrl": "https://superrare.myfilebase.com/ipfs/Qmamiu7PANFwpHLm824rD27pMpHJf7RjvruNr5G7RAPpbe",
+      "raribleUrl": "https://testnet.rarible.com/token/base/0x9c3be85309BC9d6D258cb3f571B979eC5DC6ecB9:7",
+      "basescan": "https://sepolia.basescan.org/tx/0x5ed6e211f7f9d582924d49150aecdb0130ce2ffc24a165cfc8951fad23bc56dc",
+      "humanInvolved": false
     }
   ],
   "moltbookPosts": [],
@@ -138,18 +184,32 @@
       "contentType": "lesson-proof",
       "ipfsUrl": "https://gateway.pinata.cloud/ipfs/QmdYtetkYFT1u61YYJc2Ps3fTvibgXG11PMvYDqYzb1NNK",
       "humanInvolved": false
+    },
+    {
+      "timestamp": "2026-03-19T20:58:35.405Z",
+      "cid": "QmX7YnMuoGSCtFvLoQz9bsNf5QkMBiU7necVuH73VzRTUC",
+      "contentType": "lesson-proof",
+      "ipfsUrl": "https://gateway.pinata.cloud/ipfs/QmX7YnMuoGSCtFvLoQz9bsNf5QkMBiU7necVuH73VzRTUC",
+      "humanInvolved": false
+    },
+    {
+      "timestamp": "2026-03-20T12:57:26.388Z",
+      "cid": "QmadPguwVkBu5F4cghinbDrRFWwSVMJzmGXfJZkQMm1iwN",
+      "contentType": "lesson-proof",
+      "ipfsUrl": "https://gateway.pinata.cloud/ipfs/QmadPguwVkBu5F4cghinbDrRFWwSVMJzmGXfJZkQMm1iwN",
+      "humanInvolved": false
     }
   ],
   "summary": {
     "totalCycles": 0,
     "totalDecisions": 0,
     "totalToolCalls": 0,
-    "totalPayments": 2,
-    "totalNFTsMinted": 3,
+    "totalPayments": 4,
+    "totalNFTsMinted": 5,
     "totalMoltbookPosts": 0,
-    "totalFilecoinStores": 4,
+    "totalFilecoinStores": 6,
     "totalRetries": 0,
     "totalFailures": 0,
-    "lastUpdated": "2026-03-19T10:55:06.927Z"
+    "lastUpdated": "2026-03-20T12:58:05.319Z"
   }
 }

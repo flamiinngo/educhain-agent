@@ -161,7 +161,7 @@ export function logPayment({ txHash, amount, to, topic, score, network }) {
     topic,
     score,
     network: network || 'Celo Sepolia',
-    celoscan: txHash ? `https://celo-sepolia.celoscan.io/tx/${txHash}` : null,
+    celoscan: txHash ? `https://celoscan.io/tx/${txHash}` : null,
     humanInvolved: false,
   };
   agentLog.payments.push(entry);

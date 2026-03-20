@@ -203,7 +203,7 @@ app.get("/proof", async (req, res) => {
       .slice(-5)
       .map(a => ({
         tx: a.txHash || "pending",
-        celoscan: a.txHash ? `https://sepolia.celoscan.io/tx/${a.txHash}` : "pending",
+        celoscan: a.txHash ? `https://celoscan.io/tx/${a.txHash}` : "pending",
         amount: `${a.amount} cUSD`,
         topic: a.topic,
         timestamp: a.timestamp,
@@ -486,12 +486,12 @@ app.post("/submit-quiz", async (req, res) => {
           to: payWallet,
           txHash: paymentResult.txHash,
           network: "Celo Sepolia",
-          celoscan: `https://sepolia.celoscan.io/tx/${paymentResult.txHash}`,
-          explorer: `https://sepolia.celoscan.io/tx/${paymentResult.txHash}`
+          celoscan: `https://celoscan.io/tx/${paymentResult.txHash}`,
+          explorer: `https://celoscan.io/tx/${paymentResult.txHash}`
         };
         // Legacy flat fields for backward compat
         response.txHash = paymentResult.txHash;
-        response.celoscan = `https://sepolia.celoscan.io/tx/${paymentResult.txHash}`;
+        response.celoscan = `https://celoscan.io/tx/${paymentResult.txHash}`;
         response.paymentTx = paymentResult.txHash;
         console.log(`[SUBMIT] ✅ Payment sent to ${payWallet}: ${paymentResult.txHash}`);
         logPayment({ txHash: paymentResult.txHash, amount: gradeResult.reward, to: payWallet, topic: quizTopic, score: gradeResult.score });
@@ -647,7 +647,7 @@ app.post("/demo", async (req, res) => {
         lesson: { topic, content: lessonData.lesson, generatedBy: "venice-ai", model: "llama-3.3-70b", humanInvolved: false },
         quiz: { questions: lessonData.quiz, generatedBy: "venice-ai", humanInvolved: false },
         grade: { score: gradeResult.score, outOf: 5, passed: gradeResult.passed, gradedBy: "ai", humanInvolved: false },
-        payment: { amount: `${gradeResult.reward} cUSD`, tx: paymentResult.txHash, celoscan: `https://sepolia.celoscan.io/tx/${paymentResult.txHash}`, network: "celo-sepolia", humanInvolved: false },
+        payment: { amount: `${gradeResult.reward} cUSD`, tx: paymentResult.txHash, celoscan: `https://celoscan.io/tx/${paymentResult.txHash}`, network: "celo-sepolia", humanInvolved: false },
         storage: { filecoinCID: storageResult.filecoinCID, ipfsGateway: storageResult.ipfsGateway, humanInvolved: false },
         nft: { tokenId: nftResult.tokenId, mintTx: nftResult.txHash || nftResult.mintTx || "pending", theme: nftResult.theme, rarible: nftResult.raribleUrl, image: nftResult.imageUrl, humanInvolved: false }
       },
@@ -777,7 +777,7 @@ app.get("/dashboard-data", async (req, res) => {
         amount: a.amount || 0.10,
         score: a.score,
         txHash: a.txHash,
-        celoscan: a.txHash ? `https://sepolia.celoscan.io/tx/${a.txHash}` : null,
+        celoscan: a.txHash ? `https://celoscan.io/tx/${a.txHash}` : null,
         raribleUrl: a.raribleUrl || null,
         nftTokenId: a.nftTokenId || null,
         timestamp: a.timestamp,

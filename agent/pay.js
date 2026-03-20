@@ -164,7 +164,7 @@ async function payStudent(walletAddress, score, topic, filecoinCID, quizStartTim
     success: true,
     amount: `${reward} cUSD`,
     txHash: receipt.hash,
-    celoscan: `https://celo-sepolia.celoscan.io/tx/${receipt.hash}`,
+    celoscan: `https://celoscan.io/tx/${receipt.hash}`,
     network: "celo-sepolia",
     humanInvolved: false
   };
