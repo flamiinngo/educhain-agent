@@ -141,7 +141,7 @@ async function mintViaRareCLI({ svgContent, nftName, description, topic, grade, 
     return { tokenId, txHash, metaCID, imageCID, svgContent,
       nftName, theme: getTheme(topic).name,
       basescan:        txHash   ? `https://celoscan.io/tx/${txHash}` : null,
-      raribleUrl:      tokenId  ? `https://testnet.rarible.com/token/base/${RARE_CONTRACT}:${tokenId}` : null,
+      raribleUrl:      tokenId  ? `https://tofunft.com/nft/celo/${RARE_CONTRACT}/${tokenId}` : null,
       openseaUrl:      tokenId  ? `https://tofunft.com/nft/celo/${RARE_CONTRACT}/${tokenId}` : null,
       imageUrl:        imageCID ? `https://superrare.myfilebase.com/ipfs/${imageCID}` : null,
       metaUrl:         metaCID  ? `https://superrare.myfilebase.com/ipfs/${metaCID}` : null,
@@ -185,11 +185,11 @@ async function mintDirectFallback({ svgContent, nftName, description, topic, gra
   let tx = await contract.mint(target, topic||'General', score||0, ethers.parseEther('0.10'), imageCID||'pending', 'pending');
   const receipt = await tx.wait();
   const log = receipt.logs.find(l=>l.topics && l.topics.length>=4 && l.topics[0]===ethers.id('Transfer(address,address,uint256)'));
-  const tokenId = log ? parseInt(log.topics[3],16) : null;
+  const tokenId = log ? Number(BigInt(log.topics[3])) : null;
 
   return { txHash: receipt.hash, mintTx: receipt.hash, tokenId, imageCID, metaCID, nftName, svgContent, theme: theme.name,
     basescan:        `https://celoscan.io/tx/${receipt.hash}`,
-    raribleUrl:      tokenId ? `https://rarible.com/token/celo/${DIRECT_CONTRACT}:${tokenId}` : null,
+    raribleUrl:      tokenId ? `https://tofunft.com/nft/celo/${DIRECT_CONTRACT}/${tokenId}` : null,
     openseaUrl:      tokenId ? `https://tofunft.com/nft/celo/${DIRECT_CONTRACT}/${tokenId}` : null,
     imageUrl:        imageCID ? `https://jade-eligible-chicken-571.mypinata.cloud/ipfs/${imageCID}` : null,
     metaUrl:         metaCID  ? `https://jade-eligible-chicken-571.mypinata.cloud/ipfs/${metaCID}` : null,
@@ -254,7 +254,7 @@ export async function getAllNFTs() {
               protocol: c.label,
               imageUrl:   imageCID ? c.gw + imageCID : null,
               filecoinCID: imageCID,
-              raribleUrl: `https://testnet.rarible.com/token/base/${c.address}:${i}`,
+              raribleUrl: `https://tofunft.com/nft/celo/${c.address}/${i}`,
               openseaUrl: `https://tofunft.com/nft/celo/${c.address}/${i}`,
               humanInvolved: false,
             });
