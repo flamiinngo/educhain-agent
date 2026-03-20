@@ -5,6 +5,7 @@ import cron from "node-cron";
 import memory from "./memory.js";
 import { getContractStats } from "./pay.js";
 import { checkSurvivalMode } from "./survival.js";
+import { brainTick } from "./brain.js";
 
 const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
 
@@ -45,6 +46,13 @@ async function runCycle() {
     // Step 4: Review flagged accounts
     if (memory.flaggedAccounts.length > 0) {
       console.log(`[${new Date().toLocaleTimeString()}] Reviewing ${memory.flaggedAccounts.length} flagged accounts...`);
+    }
+
+    // Step 4.5: Brain tick (Moltbook, decisions)
+    try {
+      await brainTick();
+    } catch (err) {
+      console.log(`[AGENT] Brain tick error: ${err.message.slice(0, 60)}`);
     }
 
     // Step 5: Log cycle
