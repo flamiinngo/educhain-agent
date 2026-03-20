@@ -219,7 +219,7 @@ export async function mintImpactNFT({ studentName, studentWallet, topic, grade, 
     return await mintViaRareCLI({ svgContent, nftName, description, topic, grade, score, studentName, walletAddress: studentWallet });
   } catch (err) {
     console.log(`[NFT] Rare CLI failed (${err.message.slice(0,60)}), using fallback...`);
-    console.log('[NFT] Fallback disabled - CLI is required'); return { txHash: null, tokenId: null, nftName, theme: theme.name, raribleUrl: null, humanInvolved: false };
+    console.log('[NFT] CLI failed, using direct fallback...'); return await mintDirectFallback({ svgContent, nftName, description, topic, grade, score, theme: getTheme(topic), studentWallet });
   }
 }
 
