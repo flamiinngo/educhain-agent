@@ -13,7 +13,7 @@ import fetch from 'node-fetch';
 const AGENT_PRIVATE_KEY = process.env.AGENT_PRIVATE_KEY;
 const PINATA_JWT = process.env.PINATA_JWT;
 const RARE_CONTRACT = process.env.RARE_CONTRACT || '0x9c3be85309BC9d6D258cb3f571B979eC5DC6ecB9';
-const DIRECT_CONTRACT = RARE_CONTRACT;
+const DIRECT_CONTRACT = process.env.IMPACT_NFT_ADDRESS || '0x94788e099CC76b21267E5458522Ebb6147A4A477';
 const BASE_RPC = process.env.BASE_RPC_TESTNET || 'https://sepolia.base.org';
 
 // ─── Theme engine ─────────────────────────────────────────────────────────────
@@ -158,8 +158,7 @@ async function mintViaRareCLI({ svgContent, nftName, description, topic, grade, 
 
 async function mintDirectFallback({ svgContent, nftName, description, topic, grade, score, theme, studentWallet }) {
   const NFT_ABI = [
-    'function mint(address to, string memory tokenURI) public returns (uint256)',
-    'function mintTo(address to, string memory tokenURI) public returns (uint256)',
+    'function mint(address student, string calldata topic, uint8 score, uint256 amountPaid, string calldata filecoinCID, string calldata paymentTxHash) external returns (uint256)'
   ];
   let imageCID = null, metaCID = null;
 
@@ -184,12 +183,7 @@ async function mintDirectFallback({ svgContent, nftName, description, topic, gra
   const contract = new ethers.Contract(DIRECT_CONTRACT, NFT_ABI, wallet);
   const tokenURI = metaCID ? `ipfs://${metaCID}` : `data:application/json,${encodeURIComponent(JSON.stringify({name:nftName}))}`;
   const target = studentWallet || process.env.AGENT_ADDRESS;
-  let tx;
-  try {
-    tx = await contract.mint(target, tokenURI);
-  } catch (e) {
-    tx = await contract.mintTo(target, tokenURI);
-  }
+  let tx = await contract.mint(target, topic||'General', score||0, ethers.parseEther('0.10'), imageCID||'pending', 'pending');
   const receipt = await tx.wait();
   const log = receipt.logs.find(l=>l.topics[0]===ethers.id('Transfer(address,address,uint256)'));
   const tokenId = log ? parseInt(log.topics[3],16) : null;
