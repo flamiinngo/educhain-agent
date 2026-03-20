@@ -110,7 +110,7 @@ async function mintViaRareCLI({ svgContent, nftName, description, topic, grade, 
       '--name', nftName,
       '--description', description,
       '--image', tmpFile,
-      '--chain', 'base-sepolia',
+      '--chain', 'base-sepolia', '--royalty-receiver', process.env.AGENT_ADDRESS,
       '--to', walletAddress || process.env.AGENT_ADDRESS,
       '--attribute', `topic=${topic||'General'}`,
       '--attribute', `grade=${grade||'Unknown'}`,
@@ -128,14 +128,14 @@ async function mintViaRareCLI({ svgContent, nftName, description, topic, grade, 
     if (result.error) throw result.error;
     if (result.status !== 0) throw new Error(result.stderr || `Exit code ${result.status}`);
 
-    const output = result.stdout + (result.stderr || '');
+    const output = (result.stdout || '') + (result.stderr || '');
 
     const tokenId  = output.match(/Token ID:\s*(\d+)/)?.[1] || null;
     const txHash   = output.match(/Transaction sent:\s*(0x[a-fA-F0-9]+)/)?.[1] || null;
     const metaCID  = output.match(/Metadata pinned:\s*ipfs:\/\/(\S+)/)?.[1] || null;
     const imageCID = output.match(/Upload complete:\s*ipfs:\/\/(\S+)/)?.[1] || null;
 
-    if (!txHash) throw new Error('No transaction hash in CLI output');
+    if (!txHash && result.status !== 0) throw new Error('CLI failed: ' + (result.stderr || '').slice(0,100));
 
     console.log(`[NFT] Rare Protocol mint: Token #${tokenId} TX: ${txHash}`);
     return {
@@ -156,7 +156,7 @@ async function mintViaRareCLI({ svgContent, nftName, description, topic, grade, 
 
 // ─── Fallback: Pinata + direct contract ──────────────────────────────────────
 
-async function mintDirectFallback({ svgContent, nftName, description, topic, grade, score, theme, studentWallet }) {
+async function mintDirectFallback_disabled({ svgContent, nftName, description, topic, grade, score, theme, studentWallet }) {
   const NFT_ABI = [
     'function mint(address to, string memory tokenURI) public returns (uint256)',
     'function mintTo(address to, string memory tokenURI) public returns (uint256)',
@@ -225,7 +225,7 @@ export async function mintImpactNFT({ studentName, studentWallet, topic, grade, 
     return await mintViaRareCLI({ svgContent, nftName, description, topic, grade, score, studentName, walletAddress: studentWallet });
   } catch (err) {
     console.log(`[NFT] Rare CLI failed (${err.message.slice(0,60)}), using fallback...`);
-    return await mintDirectFallback({ svgContent, nftName, description, topic, grade, score, theme, studentWallet });
+    console.log('[NFT] Fallback disabled - CLI is required'); return { txHash: null, tokenId: null, nftName, theme: theme.name, raribleUrl: null, humanInvolved: false };
   }
 }
 
