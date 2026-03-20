@@ -20,6 +20,8 @@ const memory = {
   // Survival mode log
   survivalLog: [],
   
+  // Hackathon self-submission record
+  hackathonSubmission: null,
   // Metrics
   metrics: {
     lessonsDelivered: 0,
@@ -99,6 +101,21 @@ const memory = {
     return entry;
   },
 
+  // Record hackathon self-submission
+  recordSubmission(data) {
+    this.hackathonSubmission = {
+      submittedAt: new Date().toISOString(),
+      submittedBy: "EduChain autonomous agent",
+      humanInvolved: false,
+      ...data
+    };
+    this.logAction({
+      type: "SELF_SUBMISSION",
+      message: `Agent submitted itself to The Synthesis hackathon. humanInvolved: false`,
+      ...data
+    });
+    return this.hackathonSubmission;
+  },
   // Get full state for endpoints
   getState() {
     return {
@@ -109,9 +126,9 @@ const memory = {
       recentActions: this.getRecentActions(10),
       survivalLog: [...this.survivalLog],
       flaggedAccounts: [...this.flaggedAccounts],
-      humanInvolved: false
+      humanInvolved: false,
+      hackathonSubmission: this.hackathonSubmission
     };
   }
 };
-
 export default memory;
