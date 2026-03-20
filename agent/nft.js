@@ -156,7 +156,7 @@ async function mintViaRareCLI({ svgContent, nftName, description, topic, grade, 
 
 // ─── Fallback: Pinata + direct contract ──────────────────────────────────────
 
-async function mintDirectFallback_disabled({ svgContent, nftName, description, topic, grade, score, theme, studentWallet }) {
+async function mintDirectFallback({ svgContent, nftName, description, topic, grade, score, theme, studentWallet }) {
   const NFT_ABI = [
     'function mint(address to, string memory tokenURI) public returns (uint256)',
     'function mintTo(address to, string memory tokenURI) public returns (uint256)',
