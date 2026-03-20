@@ -717,7 +717,7 @@
     if (data.nft) {
       const n = data.nft;
       document.getElementById('nft-hash').textContent = n.txHash || '—';
-      document.getElementById('CELOSCAN-link').href = n.CELOSCAN || '#';
+      document.getElementById('CELOSCAN-link').href = n.basescan || n.celoscan || '#';
 
       // NFT preview
       if (n.svg) { const img = document.getElementById('nft-art-img'); img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(n.svg); } else if (n.image) { document.getElementById('nft-art-img').src = n.image;
