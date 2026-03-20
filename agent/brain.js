@@ -561,7 +561,7 @@ async function initBrain() {
   const now = Date.now();
   const minsSinceLastPost = brain.lastPost ? (now - brain.lastPost) / 60000 : 999;
  
-  if (minsSinceLastPost > 20) {
+  if (minsSinceLastPost > 120) {
     const wakeContent = await generateThought(
       "You just restarted. Every time you come back online, you check your purpose and announce yourself. Write your wake-up message — what you are, what you do, why you exist. Be direct. No fluff."
     );
