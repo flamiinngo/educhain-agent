@@ -758,12 +758,12 @@
       const f = data.filecoin;
       document.getElementById('filecoin-cid').textContent = f.imageCID || f.metaCID || '—';
       document.getElementById('ipfs-link').href = f.ipfsUrl || f.gateway || '#';
-      document.getElementById('meta-link').href = `https://ipfs.io/ipfs/${f.metaCID}`;
+      document.getElementById('meta-link').href = `https://gateway.pinata.cloud/ipfs/${f.metaCID}`;
       document.getElementById('filecoin-card').style.display = 'block';
     } else if (data.cid || data.filecoinCID) {
       const cid = data.cid || data.filecoinCID;
       document.getElementById('filecoin-cid').textContent = cid;
-      document.getElementById('ipfs-link').href = `https://ipfs.io/ipfs/${cid}`;
+      document.getElementById('ipfs-link').href = `https://gateway.pinata.cloud/ipfs/${cid}`;
       document.getElementById('filecoin-card').style.display = 'block';
     }
 
