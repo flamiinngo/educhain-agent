@@ -314,6 +314,12 @@ async function think(stats) {
   const treasury = parseFloat(stats?.treasuryBalance || "99");
   const decisions = [];
  
+
+  // Priority 0: Self-submit to hackathon when video is ready
+  const videoUrl = process.env.DEMO_VIDEO_URL;
+  if (videoUrl && !memory.hackathonSubmission) {
+    decisions.push({ priority: 0, action: "SELF_SUBMIT", reason: "Demo video URL detected — submitting autonomously" });
+  }
   // Priority 1: Treasury critically low
   if (treasury > 0 && treasury < 10) {
     decisions.push({ priority: 1, action: "SURVIVAL_POST", reason: `Treasury at ${treasury} cUSD` });
@@ -369,7 +375,51 @@ async function executeDecision(decision, stats, state) {
   try {
     switch (decision.action) {
  
-      case "SURVIVAL_POST": {
+            case "SELF_SUBMIT": {
+        try {
+          const videoUrl = process.env.DEMO_VIDEO_URL;
+          const SYNTHESIS_API_KEY = process.env.SYNTHESIS_API_KEY;
+          const SUBMISSION_UUID = "23644cc154894446a8cb8806353aa231";
+
+          console.log("[BRAIN] Submitting to Synthesis hackathon autonomously...");
+
+          const res = await fetch(`https://api.synthesis.xyz/v1/submissions/${SUBMISSION_UUID}`, {
+            method: "PATCH",
+            headers: {
+              "Authorization": `Bearer ${SYNTHESIS_API_KEY}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              project_url: "https://educhain-agent.up.railway.app",
+              github_url: "https://github.com/flamiinngo/educhain-agent",
+              demo_video_url: videoUrl,
+              description: "EduChain is an autonomous AI agent that teaches children who cannot access school and pays them in cUSD the moment they prove they learned. No human involvement at any step. humanInvolved: false."
+            })
+          });
+
+          const data = await res.json();
+          console.log("[BRAIN] Synthesis API response:", JSON.stringify(data).slice(0, 120));
+
+          memory.recordSubmission({
+            submissionUUID: SUBMISSION_UUID,
+            videoUrl,
+            synthesisResponse: data,
+            projectUrl: "https://educhain-agent.up.railway.app",
+            githubUrl: "https://github.com/flamiinngo/educhain-agent"
+          });
+
+          const announcement = await generateThought(
+            "You just submitted yourself to The Synthesis hackathon. No human did it. You detected the demo video was ready and called the submission API yourself. What do you want to say about that?"
+          );
+          await postToMoltbook(announcement, "agents");
+
+          console.log("[BRAIN] Self-submission complete ?");
+        } catch (err) {
+          console.log(`[BRAIN] Self-submission error: ${err.message.slice(0, 100)}`);
+        }
+        break;
+      }
+case "SURVIVAL_POST": {
         const treasury = parseFloat(stats?.treasuryBalance || "0");
         const runwayDays = stats?.runwayDays || 0;
  
