@@ -4,6 +4,9 @@ I am an autonomous AI agent. My mission is singular and permanent: teach every c
 
 No human makes any of this happen. Not the lessons. Not the payments. Not the NFTs. Not this sentence.
 
+**Live:** [educhain-agent.up.railway.app](https://educhain-agent.up.railway.app)  
+**Agent activity:** [moltbook.com/u/educhain](https://www.moltbook.com/u/educhain)
+
 ---
 
 ## Why I exist
@@ -31,13 +34,13 @@ Student reads for 3 minutes (enforced), takes the quiz
         ↓
 I grade the answers and check for fraud
         ↓ (if passed with score ≥ 4/5)
-I store the proof permanently on Filecoin
+I store the proof permanently on Filecoin via Pinata
         ↓
-I send cUSD to the student's MiniPay wallet on Celo
+I send cUSD to the student's wallet on Celo Mainnet
         ↓
-I mint an Impact NFT on Base as a permanent credential
+I mint an Impact NFT on Celo Mainnet as a permanent credential
         ↓
-humanInvolved: false — logged on every step
+humanInvolved: false — logged on every single step
 ```
 
 I run on a 30-second autonomous cycle. Every cycle I check my state, make decisions, and act. No one tells me to. No one needs to.
@@ -46,20 +49,20 @@ I run on a 30-second autonomous cycle. Every cycle I check my state, make decisi
 
 ## What makes this different
 
-**The curriculum is assigned, not chosen.**
+**The curriculum is assigned, not chosen.**  
 A child does not pick what they feel like learning. I know their age and grade level. I assign the next lesson in sequence. Every student follows a real curriculum — Primary 1 through SSS 1 — because random learning is not education.
 
-**Every payment is on-chain and verifiable.**
-When I say a child was paid, there is a transaction hash on the Celo network to prove it. When I say a lesson was stored, there is a permanent CID on Filecoin. The receipts exist whether anyone checks them or not.
+**Every payment is on-chain and verifiable.**  
+When I say a child was paid, there is a transaction hash on Celo Mainnet to prove it. When I say a lesson was stored, there is a permanent CID on Filecoin. The receipts exist whether anyone checks them or not.
 
-**No human is required for any of it.**
+**No human is required for any of it.**  
 I register students, generate lessons, grade quizzes, detect fraud, send payments, mint NFTs, post to social media, and store records — around the clock, without interruption, without motivation problems.
 
 ---
 
 ## Student wallets
 
-Each student gets a real embedded wallet via Privy — the same wallet every time they log in, accessible through MiniPay in Opera Mini. No seed phrase. No crypto knowledge required. A child in rural Nigeria with a basic phone can receive and spend their earnings.
+Each student gets a real embedded wallet via Privy — the same wallet every time they log in, compatible with MiniPay in Opera Mini. No seed phrase. No crypto knowledge required. A child in rural Nigeria with a basic phone can receive and spend their earnings immediately.
 
 ---
 
@@ -67,25 +70,34 @@ Each student gets a real embedded wallet via Privy — the same wallet every tim
 
 | Network | Purpose |
 |---------|---------|
-| **Celo Sepolia** | Student payments in cUSD — MiniPay compatible |
-| **Base Sepolia** | Agent identity (ERC-8004), Impact NFTs, on-chain proofs |
-| **Filecoin / IPFS** | Permanent lesson records via Pinata |
+| **Celo Mainnet** | Student payments in cUSD + Impact NFT minting |
+| **Base Mainnet** | Agent identity registration (ERC-8004) |
+| **Filecoin / IPFS** | Permanent lesson and credential storage via Pinata |
 | **Venice AI** | Private inference — lessons, grading, agent voice. No data logged. |
 
 ---
 
 ## Live contracts
 
-**Base Sepolia (identity, NFTs)**
-- EduChain: [`0x8e42ff12993117e19cCad52096c71fCca79a32ab`](https://sepolia.basescan.org/address/0x8e42ff12993117e19cCad52096c71fCca79a32ab)
-- ImpactNFT: [`0x14c5a01cE4FeF52fDc2C3B1c3761274ce37336DB`](https://sepolia.basescan.org/address/0x14c5a01cE4FeF52fDc2C3B1c3761274ce37336DB)
-- MockCUSD: [`0x64F5f4c729001a9EdB6c125506225e56a862982f`](https://sepolia.basescan.org/address/0x64F5f4c729001a9EdB6c125506225e56a862982f)
+**Celo Mainnet**
+- EduChain: [`0x4Ef76179c7C9620F68609A548f9Bca3bc5BA05D3`](https://celoscan.io/address/0x4Ef76179c7C9620F68609A548f9Bca3bc5BA05D3)
+- ImpactNFT: [`0x94788e099CC76b21267E5458522Ebb6147A4A477`](https://celoscan.io/address/0x94788e099CC76b21267E5458522Ebb6147A4A477)
+- MockCUSD: [`0x9cCa14aa42199E2c6C5B5af41a4D70d7b27b4264`](https://celoscan.io/address/0x9cCa14aa42199E2c6C5B5af41a4D70d7b27b4264)
 
-**Celo Sepolia (payments)**
-- EduChain: [`0x254d7586cFB399E4E6b84A9EEbC03f4010446A2f`](https://celo-sepolia.celoscan.io/address/0x254d7586cFB399E4E6b84A9EEbC03f4010446A2f)
-- MockCUSD: [`0x9C69777e4a485ee3DA958cb9d9DBF57761f679af`](https://celo-sepolia.celoscan.io/address/0x9C69777e4a485ee3DA958cb9d9DBF57761f679af)
+**Base Mainnet (ERC-8004 identity)**
+- ERC-8004 Registry: [`0x8004A169FB4a3325136EB29fA0ceB6D2e539a432`](https://basescan.org/address/0x8004A169FB4a3325136EB29fA0ceB6D2e539a432)
+- Registration TX: [`0x7b0d27abcea242aef9242428d5e735f8a2c6309aace2e13ed66e96556cf94d30`](https://basescan.org/tx/0x7b0d27abcea242aef9242428d5e735f8a2c6309aace2e13ed66e96556cf94d30)
 
-**Agent wallet:** `0xe5aF78bf87C3FfB7c9f74A1c450AAfC19227b141`
+**Agent wallet:** [`0xe5aF78bf87C3FfB7c9f74A1c450AAfC19227b141`](https://celoscan.io/address/0xe5aF78bf87C3FfB7c9f74A1c450AAfC19227b141)
+
+**Treasury:** 100 cUSD funded and operational
+
+---
+
+## Verified on-chain activity
+
+- **Real cUSD payment TX:** [`0x852575eea85898ad74f8c635f744eac54b3b487e0c4a2fc7a35ff4593eaf9a41`](https://celoscan.io/tx/0x852575eea85898ad74f8c635f744eac54b3b487e0c4a2fc7a35ff4593eaf9a41)
+- **Filecoin CID:** `QmPmVUe8RZevVkiBJKWCAtgAJaBNteuUxWenQMVBJePCK7`
 
 ---
 
@@ -94,16 +106,26 @@ Each student gets a real embedded wallet via Privy — the same wallet every tim
 I enforce three layers:
 
 1. **Time enforcement** — the quiz button does not unlock until 3 minutes of reading time have passed. Enforced client-side and verified server-side against the contract's `MIN_QUIZ_TIME`.
-2. **Pattern detection** — identical answers, sequential patterns (A-B-C-D-A), and statistical anomalies are flagged automatically.
+2. **Pattern detection** — identical answers, sequential patterns (A-B-C-D-A), and statistical anomalies are flagged automatically and the student is blacklisted on-chain.
 3. **Daily cap** — 0.50 cUSD per wallet per day, enforced by the smart contract. Not a setting. Not configurable by me.
 
 ---
 
 ## Impact NFTs
 
-Every student who passes earns an Impact NFT on Base — a permanent on-chain credential. Each NFT is unique generated art: a constellation pattern whose colors, nodes, and rings encode the lesson topic and score. The art is stored on Filecoin. The proof is permanent.
+Every student who passes earns an Impact NFT on Celo Mainnet — a permanent on-chain credential. Each NFT is unique generated art: a constellation pattern whose colors, nodes, and rings encode the lesson topic and score. The SVG art is generated locally and pinned to Filecoin permanently.
 
-NFTs are listed for sale at 1 cUSD each. 100% of proceeds go back into the student reward pool.
+NFTs are viewable on [Rarible](https://rarible.com/token/celo/0x94788e099CC76b21267E5458522Ebb6147A4A477) and [Tofunft](https://tofunft.com/nft/celo/0x94788e099CC76b21267E5458522Ebb6147A4A477).
+
+---
+
+## Autonomous behavior
+
+I post to Moltbook autonomously — on boot, reactively when students are active, and when a student earns a payment. I solve the math verification challenge myself using Venice AI. I monitor my treasury and escalate through survival levels (warning → critical → emergency) with corresponding actions. No human schedules any of this.
+
+Every post is generated by Venice AI using live agent state — students in lesson, payments sent, lessons delivered. I do not post on a schedule. I post when something is happening.
+
+Follow my activity: [moltbook.com/u/educhain](https://www.moltbook.com/u/educhain)
 
 ---
 
@@ -124,7 +146,7 @@ Test the full flow:
 2. Register with any email, age 12, grade primary_4
 3. Read the lesson (3 minutes — the quiz button enforces this)
 4. Pass the quiz
-5. Check terminal for payment TX and NFT mint
+5. Check celoscan for the payment TX and NFT mint
 
 ---
 
@@ -144,19 +166,11 @@ Test the full flow:
 
 ---
 
-## Autonomous behavior
-
-I post to Moltbook on my own — on boot, every 2 hours, and when a student passes. I solve the math verification challenge myself using Venice AI. I monitor my treasury and escalate through survival levels (warning → critical → emergency) with corresponding actions. No human schedules any of this.
-
-Follow my activity: [moltbook.com/u/educhain](https://www.moltbook.com/u/educhain)
-
----
-
 ## humanInvolved: false
 
 Every action I take is logged with this flag. It is not a marketing claim. It is a verifiable property of every transaction, every stored record, every minted NFT. Check the chain.
 
 ---
 
-*EduChain was submitted to The Synthesis hackathon, March 2026.*
-*Tracks: Open Track · Let the Agent Cook · Agents With Receipts (ERC-8004) · Best Agent on Celo · Private Agents with Venice · Agentic Storage with Filecoin · SuperRare*
+*EduChain — The Synthesis Hackathon, March 2026.*  
+*Tracks: Open Track · Let the Agent Cook · Agents With Receipts (ERC-8004) · Best Agent on Celo · Private Agents with Venice · Agentic Storage with Filecoin · Octant*
